@@ -196,6 +196,18 @@ public:
     // Specifically, when you need to collapse an edge in iostropic_remesh() or simplify(),
     // you should call collapse_edge_erase() instead of collapse_edge()
 
+    /*  bevel_vertex:  VertexBevel - advanced task   
+        bevel_edge:    EdgeBevel - advanced task
+        bevel_face:    FaceBevel - basic task
+        erase_vertex:  EraseVertex - advanced task
+        erase_edge:    EraseEdge - advanced task
+        collapse_edge: EdgeCollapse - basic task
+            Collapsing a boundary edge - advanced task
+        collapse_face: FaceCollapse - advanced task
+        flip_edge:     EdgeFlip - basic task
+        split_edge:    EdgeSplit - basic task
+            Splitting a boundary edge - advanced task 
+    */
     /*
         Merge all faces incident on a given vertex, returning a
         pointer to the merged face.

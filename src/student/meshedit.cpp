@@ -6,6 +6,8 @@
 #include "../geometry/halfedge.h"
 #include "debug.h"
 
+#include <iostream>
+
 /* Note on local operation return types:
 
     The local operations all return a std::optional<T> type. This is used so that your
@@ -87,8 +89,133 @@ std::optional<Halfedge_Mesh::EdgeRef> Halfedge_Mesh::flip_edge(Halfedge_Mesh::Ed
 */
 std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::split_edge(Halfedge_Mesh::EdgeRef e) {
 
-    (void)e;
-    return std::nullopt;
+    /* Steps (by Jerry): 
+
+              c
+            / | \
+           /  |  \
+          /   |   \
+         a -- m -- d
+          \   |   /
+           \  |  /
+            \ | /
+              b
+
+        0. first check face is trainalge! If not, no ops 
+        1. Find the two vertices pos of a given edge (bc)
+        2. acalculate middle of the two vertices 
+        3. add elements to mesh 
+           - new vertex m
+           - m to c: 2 new half edges, 1 new edge 
+           - m to a: 2 new half edges, 1 new edge
+           - m to d: 2 new half edges, 1 new edge  
+           - 2 new faces - mca, mdc 
+        4. reassign given edge and its halfedge   
+        5. return an iterator to the newly inserted vertex (m)
+    */
+    
+    // const vs non const ref? 
+
+    // 1. 
+    // an edge will point arbitrarily to either its "left" or "right" halfedge, use twin to get both 
+    VertexRef vertex_b = e->halfedge()->vertex(); // 1st vertex 
+    VertexRef vertex_c = e->halfedge()->twin()->vertex(); // 2nd vertex 
+
+    // 2. calculate middle of two pos    
+    Vec3 pos_middle = vertex_b->pos.operator+(vertex_c->pos);    
+    pos_middle = pos_middle.operator*(0.5);
+
+    // 3. 
+    VertexRef vertex_m = new_vertex(); // initialize new vertex, m 
+    HalfedgeRef half_m_c = new_halfedge(); 
+    HalfedgeRef half_c_m = new_halfedge(); 
+    HalfedgeRef half_m_d = new_halfedge(); 
+    HalfedgeRef half_d_m = new_halfedge(); 
+    HalfedgeRef half_m_a = new_halfedge(); 
+    HalfedgeRef half_a_m = new_halfedge(); 
+    FaceRef face_mca = new_face();
+    FaceRef face_mdc = new_face();
+    EdgeRef edge_mc = new_edge(); 
+    EdgeRef edge_ma = new_edge(); 
+    EdgeRef edge_md = new_edge(); 
+
+    vertex_m->pos = pos_middle; // assign pos to m 
+    // vertex_m->halfedge() = e->halfedge()->twin(); // The halfedge of this vertex should point along the edge that was split, rather than the new edges.
+    vertex_m->halfedge() = half_m_c; // The halfedge of this vertex should point along the edge that was split, rather than the new edges.
+
+    half_m_c->twin() = half_c_m;
+    half_m_c->next() = e->halfedge()->next(); 
+    half_m_c->vertex() = vertex_m; 
+    half_m_c->edge() = edge_mc;
+    half_m_c->face() = face_mca; 
+
+    half_c_m->twin() = half_m_c; 
+    half_c_m->next() = half_m_d; 
+    half_c_m->vertex() = vertex_c; 
+    half_c_m->edge() = edge_mc;
+    half_c_m->face() = face_mdc;
+
+    half_m_d->twin() = half_d_m;
+    half_m_d->next() = e->halfedge()->twin()->next()->next(); // assume triangle....
+    half_m_d->vertex() = vertex_m; 
+    half_m_d->edge() = edge_md;
+    half_m_d->face() = face_mdc; 
+
+    half_d_m->twin() = half_m_d; 
+    half_d_m->next() = e->halfedge()->twin(); 
+    half_d_m->vertex() = e->halfedge()->twin()->next()->next()->vertex(); 
+    half_d_m->edge() = edge_md;
+    half_d_m->face() = e->halfedge()->twin()->face(); // original face 
+
+    half_m_a->twin() = half_a_m;
+    half_m_a->next() = e->halfedge()->next()->next(); // assume triangle....
+    half_m_a->vertex() = vertex_m; 
+    half_m_a->edge() = edge_ma;
+    half_m_a->face() = e->halfedge()->face(); // original face  
+
+    half_a_m->twin() = half_m_a; 
+    half_a_m->next() = half_m_c; 
+    half_a_m->vertex() = e->halfedge()->next()->next()->vertex(); 
+    half_a_m->edge() = edge_ma;
+    half_a_m->face() = face_mca;   
+
+    edge_mc->halfedge() = half_m_c; // arbitrary choose m_c halfedge 
+    edge_ma->halfedge() = half_m_a; // arbitrary choose m_a halfedge 
+    edge_md->halfedge() = half_m_d; // arbitrary choose m_d halfedge 
+    
+    face_mca->halfedge() = half_m_c; // arbitrary choose m_c halfedge 
+    face_mdc->halfedge() = half_m_d; // arbitrary choose m_d halfedge 
+
+    // 4. reassign 
+    // make sure vertex_c halfedge is point to correct one even it is already 
+    vertex_c->halfedge() = e->halfedge()->next(); 
+
+    // update twin's vertex (m_b)
+    e->halfedge()->twin()->vertex() = vertex_m;
+
+    // update face for exisiting half edges (c_a, d_c)
+    e->halfedge()->next()->face() = face_mca; 
+    e->halfedge()->twin()->next()->next()->face() = face_mdc;
+
+    // update next for existing halfedges, order of these 2 line is important  
+    e->halfedge()->twin()->next()->next()->next() = half_c_m; // d_c first 
+    e->halfedge()->twin()->next()->next() = half_d_m; // then b_c
+    
+    // update next for existing halfedges, order of this two line is important  
+    e->halfedge()->next()->next() = half_a_m; // c_a first 
+    e->halfedge()->next() = half_m_a; // then halfedge, b_m
+
+    // make sure previous face point to correct half edge even it is already 
+    e->halfedge()->face()->halfedge() = half_m_a; 
+    e->halfedge()->twin()->face()->halfedge() = half_d_m;  
+
+    // debug 
+    // std::cout << "1st vertex: " << pos1 << std::endl; 
+    // std::cout << "2nd vertex: " << pos2 << std::endl; 
+    // std::cout << "middle: " << pos_middle << std::endl << std::endl; 
+
+    // (void)e;
+    return vertex_m;
 }
 
 /* Note on the beveling process:
