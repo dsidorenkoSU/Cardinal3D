@@ -115,7 +115,15 @@ std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::split_edge(Halfedge_Mesh:
     */
     
     // const vs non const ref? 
-
+    // 0. 
+    if (e->halfedge() != e->halfedge()->next()->next()->next()){
+        std::cout << "not a traingle mesh" << std::endl; 
+        return std::nullopt;
+    }
+    if (e->halfedge()->twin() != e->halfedge()->twin()->next()->next()->next()){
+        std::cout << "not a traingle mesh" << std::endl; 
+        return std::nullopt;
+    }
     // 1. 
     // an edge will point arbitrarily to either its "left" or "right" halfedge, use twin to get both 
     VertexRef vertex_b = e->halfedge()->vertex(); // 1st vertex 
