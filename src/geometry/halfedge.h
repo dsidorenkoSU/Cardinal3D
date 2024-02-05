@@ -457,6 +457,15 @@ public:
         HalfedgeRef& next() {
             return _next;
         }
+
+        // Retrieves the prev halfedge
+        HalfedgeRef prev() {
+            auto t = _next;
+            while(t->next()->id() != _id) 
+                t = t->next();
+            return t;
+        }
+
         HalfedgeCRef next() const {
             return _next;
         }

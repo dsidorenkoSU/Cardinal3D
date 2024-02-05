@@ -83,9 +83,9 @@ void BVH<Primitive>::build(std::vector<Primitive>&& prims, size_t max_leaf_size)
 
     // compute bbox for right child
     for(size_t i = 1; i < primitives.size(); ++i) {
-        Primitive& p = primitives[i];
-        BBox pbb = p.bbox();
-        split_rightBox.enclose(pbb);
+        Primitive& p1 = primitives[i];
+        BBox pbb1 = p1.bbox();
+        split_rightBox.enclose(pbb1);
     }
 
     // Note that by construction in this simple example, the primitives are

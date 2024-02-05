@@ -2,7 +2,7 @@
 #include <queue>
 #include <set>
 #include <unordered_map>
-
+#include <iostream>
 #include "../geometry/halfedge.h"
 #include "debug.h"
 
@@ -48,6 +48,7 @@ std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::erase_vertex(Halfedge_Mesh:
  */
 std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::erase_edge(Halfedge_Mesh::EdgeRef e) {
 
+
     (void)e;
     return std::nullopt;
 }
@@ -58,8 +59,42 @@ std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::erase_edge(Halfedge_Mesh::E
 */
 std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::collapse_edge(Halfedge_Mesh::EdgeRef e) {
 
-    (void)e;
-    return std::nullopt;
+    
+    // Phase1
+    // HALFEDGES
+    HalfedgeRef h0 = e->halfedge();
+    HalfedgeRef h1 = h0->next();
+    HalfedgeRef h2 = h1->next();
+    HalfedgeRef h3 = h0->twin();
+    HalfedgeRef h4 = h3->next();
+    HalfedgeRef h5 = h4->next();
+    HalfedgeRef h6 = h1->twin();
+    HalfedgeRef h7 = h2->twin();
+    HalfedgeRef h8 = h4->twin();
+    HalfedgeRef h9 = h5->twin();
+
+    // VERTICES
+    VertexRef v0 = h0->vertex();
+    VertexRef v1 = h3->vertex();
+    VertexRef v2 = h5->vertex();
+    VertexRef v3 = h2->vertex();
+
+    // EDGES
+    EdgeRef e0 = h0->edge();
+    EdgeRef e1 = h5->edge();
+    EdgeRef e2 = h4->edge();
+    EdgeRef e3 = h2->edge();
+    EdgeRef e4 = h1->edge();
+
+    // FACES
+    FaceRef f0 = h0->face();
+    FaceRef f1 = h3->face();
+
+    // Phase2
+    VertexRef v4 = new_vertex(); 
+    
+
+    return std::optional(v0);
 }
 
 /*
@@ -78,8 +113,115 @@ std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::collapse_face(Halfedge_Me
 */
 std::optional<Halfedge_Mesh::EdgeRef> Halfedge_Mesh::flip_edge(Halfedge_Mesh::EdgeRef e) {
 
+    // HALFEDGES
+    HalfedgeRef h0 = e->halfedge();
+    HalfedgeRef h1 = h0->next();
+    HalfedgeRef h2 = h1->next();
+    HalfedgeRef h3 = h0->twin();
+    HalfedgeRef h4 = h3->next();
+    HalfedgeRef h5 = h4->next();
+    HalfedgeRef h6 = h1->twin();
+    HalfedgeRef h7 = h2->twin();
+    HalfedgeRef h8 = h4->twin();
+    HalfedgeRef h9 = h5->twin();
+
+    // VERTICES
+    VertexRef v0 = h0->vertex();
+    VertexRef v1 = h3->vertex();
+    VertexRef v2 = h5->vertex();
+    VertexRef v3 = h2->vertex();
+
+    // EDGES
+    EdgeRef e0 = h0->edge();
+    EdgeRef e1 = h9->edge();
+    EdgeRef e2 = h8->edge();
+    EdgeRef e3 = h7->edge();
+    EdgeRef e4 = h6->edge();
+
+    // FACES
+    FaceRef f0 = h0->face();
+    FaceRef f1 = h3->face();
+
+    // HALFEDGES
+    h0->next() = h1;
+    h0->twin() = h3;
+    h0->vertex() = v2;
+    h0->edge() = e0;
+    h0->face() = f0;
+
+    h1->next() = h2;
+    h1->twin() = h7;
+    h1->vertex() = v3;
+    h1->edge() = e3;
+    h1->face() = f0;
+    
+    h2->next() = h0;
+    h2->twin() = h8;
+    h2->vertex() = v0;
+    h2->edge() = e2;
+    h2->face() = f0;
+
+    h3->next() = h4;
+    h3->twin() = h0;
+    h3->vertex() = v3;
+    h3->edge() = e0;
+    h3->face() = f1;
+
+    h4->next() = h5;
+    h4->twin() = h9;
+    h4->vertex() = v2;
+    h4->edge() = e1;
+    h4->face() = f1;
+
+    h5->next() = h3;
+    h5->twin() = h6;
+    h5->vertex() = v1;
+    h5->edge() = e4;
+    h5->face() = f1;
+
+    h6->next() = h6->next();
+    h6->twin() = h5;
+    h6->vertex() = v3;
+    h6->edge() = e4;
+    h6->face() = h6->face();
+
+    h7->next() = h7->next();
+    h7->twin() = h1;
+    h7->vertex() = v0;
+    h7->edge() = e3;
+    h7->face() = h7->face();
+
+    h8->next() = h8->next();
+    h8->twin() = h2;
+    h8->vertex() = v2;
+    h8->edge() = e2;
+    h8->face() = h8->face();
+
+    h9->next() = h9->next(); // didn't change, but set it anyway!
+    h9->twin() = h4;
+    h9->vertex() = v1;
+    h9->edge() = e1;
+    h9->face() = h9->face(); // didn't change, but set it anyway!
+
+    // VERTICES
+    v0->halfedge() = h2;
+    v1->halfedge() = h5;
+    v2->halfedge() = h0;
+    v3->halfedge() = h3;
+
+    // EDGES
+    e0->halfedge() = h0; 
+    e1->halfedge() = h4; 
+    e2->halfedge() = h2; 
+    e3->halfedge() = h7; 
+    e4->halfedge() = h6; 
+
+    // FACES
+    f0->halfedge() = h0; 
+    f1->halfedge() = h3;
+
     (void)e;
-    return std::nullopt;
+    return std::optional(e0);
 }
 
 /*
