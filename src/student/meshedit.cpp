@@ -672,7 +672,7 @@ void Halfedge_Mesh::bevel_face_positions(const std::vector<Vec3>& start_position
     // find the normal vector of the original plane
     Vec3 v10 = start_positions[1]-start_positions[0]; 
     Vec3 v20 = start_positions[2]-start_positions[0]; 
-    Vec3 normal = cross(v10, v20);  
+    Vec3 normal = cross(v10, v20).unit();  
 
     // calculate tangent vector 
     // set new pos 
@@ -691,8 +691,8 @@ void Halfedge_Mesh::bevel_face_positions(const std::vector<Vec3>& start_position
         Vec3 pi_next = start_positions[temp_next]; // get the original next vertex pos 
 
         Vec3 temp_vec = pi.operator+(normal.operator*(-normal_offset));
-        Vec3 tangent = (pi_next.operator-(pi)).operator+(pi_pre.operator-(pi)); 
-        new_halfedges[i]->vertex()->pos = temp_vec.operator+(tangent.operator*(-0.5*tangent_offset));
+        Vec3 tangent = ((pi_next.operator-(pi)).operator+(pi_pre.operator-(pi))).unit(); 
+        new_halfedges[i]->vertex()->pos = temp_vec.operator+(tangent.operator*(-tangent_offset));
         // sign = -sign;
     }
     // std::cout << normal_offset << std::endl;
