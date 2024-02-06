@@ -60,41 +60,41 @@ std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::erase_edge(Halfedge_Mesh::E
 std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::collapse_edge(Halfedge_Mesh::EdgeRef e) {
 
     
-    // Phase1
-    // HALFEDGES
-    HalfedgeRef h0 = e->halfedge();
-    HalfedgeRef h1 = h0->next();
-    HalfedgeRef h2 = h1->next();
-    HalfedgeRef h3 = h0->twin();
-    HalfedgeRef h4 = h3->next();
-    HalfedgeRef h5 = h4->next();
-    HalfedgeRef h6 = h1->twin();
-    HalfedgeRef h7 = h2->twin();
-    HalfedgeRef h8 = h4->twin();
-    HalfedgeRef h9 = h5->twin();
+    // // Phase1
+    // // HALFEDGES
+    // HalfedgeRef h0 = e->halfedge();
+    // HalfedgeRef h1 = h0->next();
+    // HalfedgeRef h2 = h1->next();
+    // HalfedgeRef h3 = h0->twin();
+    // HalfedgeRef h4 = h3->next();
+    // HalfedgeRef h5 = h4->next();
+    // HalfedgeRef h6 = h1->twin();
+    // HalfedgeRef h7 = h2->twin();
+    // HalfedgeRef h8 = h4->twin();
+    // HalfedgeRef h9 = h5->twin();
 
-    // VERTICES
-    VertexRef v0 = h0->vertex();
-    VertexRef v1 = h3->vertex();
-    VertexRef v2 = h5->vertex();
-    VertexRef v3 = h2->vertex();
+    // // VERTICES
+    // VertexRef v0 = h0->vertex();
+    // VertexRef v1 = h3->vertex();
+    // VertexRef v2 = h5->vertex();
+    // VertexRef v3 = h2->vertex();
 
-    // EDGES
-    EdgeRef e0 = h0->edge();
-    EdgeRef e1 = h5->edge();
-    EdgeRef e2 = h4->edge();
-    EdgeRef e3 = h2->edge();
-    EdgeRef e4 = h1->edge();
+    // // EDGES
+    // EdgeRef e0 = h0->edge();
+    // EdgeRef e1 = h5->edge();
+    // EdgeRef e2 = h4->edge();
+    // EdgeRef e3 = h2->edge();
+    // EdgeRef e4 = h1->edge();
 
-    // FACES
-    FaceRef f0 = h0->face();
-    FaceRef f1 = h3->face();
+    // // FACES
+    // FaceRef f0 = h0->face();
+    // FaceRef f1 = h3->face();
 
-    // Phase2
-    VertexRef v4 = new_vertex(); 
+    // // Phase2
+    // VertexRef v4 = new_vertex(); 
     
-
-    return std::optional(v0);
+    (void)e;
+    return std::nullopt;
 }
 
 /*
@@ -437,13 +437,135 @@ std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::bevel_edge(Halfedge_Mesh::E
 */
 std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::bevel_face(Halfedge_Mesh::FaceRef f) {
 
+   /* Steps (by Jerry): 
+
+    Top view (if square face)
+         
+                  half_n0  edge_new        
+              new - - - - - - 
+              |   half_n1    |
+      half_c0 | half_c1      |   
+              |    face_c    |
+       edge_c |              |
+              |  half_orig   |
+              a - - - - - -   
+
+    */
     // Reminder: You should set the positions of new vertices (v->pos) to be exactly
     // the same as wherever they "started from."
+    
 
-    (void)f;
-    return std::nullopt;
+    // 0. accumlate list of halfedges 
+    std::vector<HalfedgeRef> new_halfedges;
+    auto h = f->halfedge();
+    do {
+        new_halfedges.push_back(h);
+        h = h->next();
+    } while(h != f->halfedge());
+
+    // 1. loop around face to count and intilize and assign if possible 
+    // int count = 0; 
+    // HalfedgeRef half_origin = f->halfedge();
+    std::cout << new_halfedges.size()-1 << std::endl; 
+
+    for (size_t i = 0; i < new_halfedges.size(); i++) {
+        
+        HalfedgeRef half_origin = new_halfedges[i];
+        VertexRef vertex_a = half_origin->vertex(); 
+        
+        // create 1 new face, 2 edges, 4 half edges, 1 vertex 
+        FaceRef face_connect = new_face(); 
+        EdgeRef edge_connect = new_edge(); 
+        EdgeRef edge_new = new_edge(); 
+        HalfedgeRef half_connect0 = new_halfedge(); 
+        HalfedgeRef half_connect1 = new_halfedge(); 
+        HalfedgeRef half_new0 = new_halfedge(); 
+        HalfedgeRef half_new1 = new_halfedge(); 
+        VertexRef vertex_new = new_vertex(); 
+        
+        half_connect1->twin() = half_connect0; 
+        half_connect1->next() = half_origin;   
+        half_connect1->vertex() = vertex_new; 
+        half_connect1->edge() = edge_connect;
+        half_connect1->face() = face_connect; 
+
+        half_connect0->twin() = half_connect1; 
+        // half_connect0->next() assign later   --  update in step 2
+        half_connect0->vertex() = vertex_a; 
+        half_connect0->edge() = edge_connect;
+        // half_connect0->face() assign later,  -- update in step 2
+
+        half_new1->twin() = half_new0; 
+        half_new1->next() = half_connect1;   
+        // half_new1->vertex() assign later  -- update in step 2
+        half_new1->edge() = edge_new;
+        half_new1->face() = face_connect; 
+
+        half_new0->twin() = half_new1; 
+        // half_new0->next() assign later     -- updatein step 2 
+        half_new0->vertex() = vertex_new; 
+        half_new0->edge() = edge_new;
+        half_new0->face() = f; // original face (f to be updated later)
+
+        edge_new->halfedge() = half_new1;         // arbitrary choose new1
+        edge_connect->halfedge() = half_connect1; // arbitrary choose connect1        
+        
+        face_connect->halfedge() = half_connect1; 
+
+        vertex_new->pos = vertex_a->pos; // set the positions of new vertices to be the same as starting 
+        vertex_new->halfedge() = half_new0; // choose new0 
+
+        // half_origin->twin() no need to update
+        // half_origin->next() assign later, update in step 2 
+        half_origin->face() = face_connect; 
+        // half_connect1->vertex() no update 
+        // half_connect1->edge() no update 
+
+        vertex_a->halfedge() = half_connect0; // reassign to half_origin. 
+
+        // next one 
+        // half_origin = half_origin->next();
+        // count++;
+    } 
+
+    // 2. loop around face again to finish assignment 
+    
+    for (size_t i = 0; i < new_halfedges.size(); i++) {
+        
+        HalfedgeRef half_origin = new_halfedges[i];
+        FaceRef face_connect = half_origin->face();
+        HalfedgeRef half_connect1 = face_connect->halfedge(); 
+        size_t temp = i+1; 
+        if (temp == new_halfedges.size()) {
+            temp = 0; 
+        }
+        HalfedgeRef half_origin_next = new_halfedges[temp];
+        HalfedgeRef half_connect0_across = half_origin_next->face()->halfedge()->twin(); 
+        HalfedgeRef half_new0 = half_connect1->vertex()->halfedge();
+        HalfedgeRef half_new1 = half_new0->twin();
+        
+        half_connect0_across->face() = face_connect;
+        half_connect0_across->next() = half_new1;
+        half_new1->vertex() = half_connect0_across->twin()->vertex();         
+        half_new0->next() = half_connect0_across->twin()->vertex()->halfedge(); 
+        half_origin->next() = half_connect0_across; 
+    }
+
+    // // 3. update f->halfedge()->next()
+    // VertexRef vertex_a = half_origin->vertex(); 
+    // for (int i = 0; i < count; i++) {
+    //     HalfedgeRef half_origin1 = vertex_a->halfedge();
+    //     HalfedgeRef half_connect0_across = vertex_a->halfedge()->next()->face()->halfedge()->twin();
+    //     vertex_a = vertex_a->halfedge()->next()->vertex(); // go to next vertex_a
+
+    //     half_origin1->next() = half_connect0_across; 
+    // } 
+
+    // 4. update f halfedge 
+    f->halfedge() = f->halfedge()->next()->next()->twin();
+
+    return f;
 }
-
 /*
     Compute new vertex positions for the vertices of the beveled vertex.
 
@@ -526,26 +648,40 @@ void Halfedge_Mesh::bevel_edge_positions(const std::vector<Vec3>& start_position
             Vec3 pi = start_positions[i]; // get the original vertex
             position corresponding to vertex i
     }
+
+    Finally, note that the normal and tangent offsets are not relative values - you
+    should compute a particular new position from them, not a delta to apply.
+
 */
 void Halfedge_Mesh::bevel_face_positions(const std::vector<Vec3>& start_positions,
                                          Halfedge_Mesh::FaceRef face, float tangent_offset,
                                          float normal_offset) {
 
     if(flip_orientation) normal_offset = -normal_offset;
+    
     std::vector<HalfedgeRef> new_halfedges;
+
+    // create a list of halfedges to loop 
     auto h = face->halfedge();
     do {
         new_halfedges.push_back(h);
         h = h->next();
     } while(h != face->halfedge());
 
-    (void)new_halfedges;
-    (void)start_positions;
-    (void)face;
-    (void)tangent_offset;
-    (void)normal_offset;
-}
+    for (size_t i = 0; i < new_halfedges.size()-1; i++) {
+        Vec3 pi = start_positions[i]; // get the original vertex pos 
+        size_t temp = i+1; 
+        if (temp == new_halfedges.size()-1) {
+            temp = 0; 
+        }
+        //Vec3 pi_next = start_positions[temp]; // get the original next vertex pos 
+        new_halfedges[i]->vertex()->pos = pi.operator+(normal_offset);
 
+    }
+    std::cout << normal_offset << std::endl;
+    std::cout << tangent_offset << std::endl << std::endl;
+
+}
 /*
     Splits all non-triangular faces into triangles.
 */
