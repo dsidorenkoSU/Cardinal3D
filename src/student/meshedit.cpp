@@ -455,7 +455,7 @@ std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::bevel_face(Halfedge_Mesh::F
     // the same as wherever they "started from."
     
 
-    // 0. accumlate list of halfedges 
+    // 0. accumlate list of original halfedges 
     std::vector<HalfedgeRef> new_halfedges;
     auto h = f->halfedge();
     do {
@@ -466,7 +466,6 @@ std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::bevel_face(Halfedge_Mesh::F
     // 1. loop around face to count and intilize and assign if possible 
     // int count = 0; 
     // HalfedgeRef half_origin = f->halfedge();
-    std::cout << new_halfedges.size()-1 << std::endl; 
 
     for (size_t i = 0; i < new_halfedges.size(); i++) {
         
@@ -657,7 +656,9 @@ void Halfedge_Mesh::bevel_face_positions(const std::vector<Vec3>& start_position
                                          Halfedge_Mesh::FaceRef face, float tangent_offset,
                                          float normal_offset) {
 
-    if(flip_orientation) normal_offset = -normal_offset;
+    // normal_offset is relative to face 
+    
+    if (flip_orientation) normal_offset = -normal_offset;
     
     std::vector<HalfedgeRef> new_halfedges;
 
@@ -668,18 +669,34 @@ void Halfedge_Mesh::bevel_face_positions(const std::vector<Vec3>& start_position
         h = h->next();
     } while(h != face->halfedge());
 
-    for (size_t i = 0; i < new_halfedges.size()-1; i++) {
-        Vec3 pi = start_positions[i]; // get the original vertex pos 
-        size_t temp = i+1; 
-        if (temp == new_halfedges.size()-1) {
-            temp = 0; 
-        }
-        //Vec3 pi_next = start_positions[temp]; // get the original next vertex pos 
-        new_halfedges[i]->vertex()->pos = pi.operator+(normal_offset);
+    // find the normal vector of the original plane
+    Vec3 v10 = start_positions[1]-start_positions[0]; 
+    Vec3 v20 = start_positions[2]-start_positions[0]; 
+    Vec3 normal = cross(v10, v20);  
 
+    // calculate tangent vector 
+    // set new pos 
+    for (size_t i = 0; i < new_halfedges.size(); i++) {
+        Vec3 pi = start_positions[i]; // get the original vertex pos 
+        int temp_pre = i-1; 
+        if (temp_pre == -1) {
+            temp_pre = new_halfedges.size()-1; 
+        }
+        Vec3 pi_pre = start_positions[temp_pre]; // get the original previous vertex pos 
+        
+        size_t temp_next = i+1; 
+        if (temp_next == new_halfedges.size()) {
+            temp_next = 0; 
+        }
+        Vec3 pi_next = start_positions[temp_next]; // get the original next vertex pos 
+
+        Vec3 temp_vec = pi.operator+(normal.operator*(-normal_offset));
+        Vec3 tangent = (pi_next.operator-(pi)).operator+(pi_pre.operator-(pi)); 
+        new_halfedges[i]->vertex()->pos = temp_vec.operator+(tangent.operator*(-0.5*tangent_offset));
+        // sign = -sign;
     }
-    std::cout << normal_offset << std::endl;
-    std::cout << tangent_offset << std::endl << std::endl;
+    // std::cout << normal_offset << std::endl;
+    // std::cout << tangent_offset << std::endl << std::endl;
 
 }
 /*
