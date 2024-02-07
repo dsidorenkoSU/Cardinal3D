@@ -53,48 +53,201 @@ std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::erase_edge(Halfedge_Mesh::E
     return std::nullopt;
 }
 
+void fill_internal_loop(Halfedge_Mesh::HalfedgeRef he, std::vector<Halfedge_Mesh::HalfedgeRef>& l){
+    
+    Halfedge_Mesh::HalfedgeRef t = he;
+    do {
+        l.push_back(t);
+        t = t->next();
+    } while(t != he);
+}
+
+void fill_over_vertex_loop(Halfedge_Mesh::HalfedgeRef he,
+                           std::vector<Halfedge_Mesh::HalfedgeRef>& l){
+    Halfedge_Mesh::HalfedgeRef t = he;
+    do {
+        l.push_back(t);
+        l.push_back(t->twin());
+        t = t->twin()->next();
+    } while(t != he);
+}
+
+bool is_in_list(Halfedge_Mesh::HalfedgeRef he,const std::vector<Halfedge_Mesh::HalfedgeRef>& l){
+    return std::find(l.begin(), l.end(), he) != l.end();
+}
+
+bool is_in_list(Halfedge_Mesh::EdgeRef e, const std::vector<Halfedge_Mesh::EdgeRef>& l) {
+    return std::find(l.begin(), l.end(), e) != l.end();
+}
+
+Halfedge_Mesh::HalfedgeRef next_in_list(Halfedge_Mesh::HalfedgeRef he,
+                                        const std::vector<Halfedge_Mesh::HalfedgeRef>& l) {
+    auto it = std::find(l.begin(), l.end(), he);
+    if(it == l.end()) return *l.begin();
+    return *(it + 1);
+}
+
+Halfedge_Mesh::HalfedgeRef next_twin(Halfedge_Mesh::HalfedgeRef ct,
+                                     const std::vector<Halfedge_Mesh::HalfedgeRef>& l0,
+                                     const std::vector<Halfedge_Mesh::HalfedgeRef>& l1) {
+    Halfedge_Mesh::HalfedgeRef tt = ct;
+    while(true) {
+        if(is_in_list(tt->twin(), l0) || is_in_list(tt->twin(), l1))
+            tt = next_in_list(tt, l0);
+        else
+            break;
+    }
+    return tt->twin();
+}
+
 /*
     This method should collapse the given edge and return an iterator to
     the new vertex created by the collapse.
 */
 std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::collapse_edge(Halfedge_Mesh::EdgeRef e) {
 
+    // Phase1: Collect data
+    // Halfedges
+    std::vector<Halfedge_Mesh::HalfedgeRef> l0, l1, s0, s1, pdh;
+    fill_internal_loop(e->halfedge(), l0);
+    fill_internal_loop(e->halfedge()->twin(), l1);
+    fill_over_vertex_loop(e->halfedge()->next(), s0);
+    fill_over_vertex_loop(e->halfedge()->twin()->next(), s1);
     
-    // // Phase1
-    // // HALFEDGES
-    // HalfedgeRef h0 = e->halfedge();
-    // HalfedgeRef h1 = h0->next();
-    // HalfedgeRef h2 = h1->next();
-    // HalfedgeRef h3 = h0->twin();
-    // HalfedgeRef h4 = h3->next();
-    // HalfedgeRef h5 = h4->next();
-    // HalfedgeRef h6 = h1->twin();
-    // HalfedgeRef h7 = h2->twin();
-    // HalfedgeRef h8 = h4->twin();
-    // HalfedgeRef h9 = h5->twin();
+    for(auto it = l0.begin(); it != l0.end(); ++it) {
+        pdh.push_back(*it);
+    }
+    for(auto it = l1.begin(); it != l1.end(); ++it) {
+        pdh.push_back(*it);
+    }
 
-    // // VERTICES
-    // VertexRef v0 = h0->vertex();
-    // VertexRef v1 = h3->vertex();
-    // VertexRef v2 = h5->vertex();
-    // VertexRef v3 = h2->vertex();
-
-    // // EDGES
-    // EdgeRef e0 = h0->edge();
-    // EdgeRef e1 = h5->edge();
-    // EdgeRef e2 = h4->edge();
-    // EdgeRef e3 = h2->edge();
-    // EdgeRef e4 = h1->edge();
-
-    // // FACES
-    // FaceRef f0 = h0->face();
-    // FaceRef f1 = h3->face();
-
-    // // Phase2
-    // VertexRef v4 = new_vertex(); 
+    //halfedges and edges to erase
+    std::vector<Halfedge_Mesh::EdgeRef> pde, ea;
+    pde.push_back(e);
+    for (auto it = l0.begin(); it < l0.end(); ++it){
+        Halfedge_Mesh::EdgeRef erf = (*it)->edge();
+        if(erf != edges_end() && !is_in_list(erf, pde)) {
+            pde.push_back(erf);
+        }   
+    }
+    for(auto it = l1.begin(); it < l1.end(); ++it) {
+        Halfedge_Mesh::EdgeRef erf = (*it)->edge();
+        if(erf != edges_end() && !is_in_list(erf, pde)) {
+            pde.push_back(erf);
+        }
+    }
+    for(auto hei = s0.begin(); hei < s0.end(); ++hei) {
+        if(!is_in_list((*hei)->edge(), pde) && !is_in_list((*hei)->edge(), ea)) {
+            ea.push_back((*hei)->edge());
+        }
+    }
+    for(auto hei = s1.begin(); hei < s1.end(); ++hei) {
+        if(!is_in_list((*hei)->edge(), pde) && !is_in_list((*hei)->edge(), ea)) {
+            ea.push_back((*hei)->edge());
+        }
+    }
+    // vertexes
+    std::vector<Halfedge_Mesh::VertexRef> v;
+    v.push_back(e->halfedge()->vertex());
+    v.push_back(e->halfedge()->twin()->vertex());
+    //
     
-    (void)e;
-    return std::nullopt;
+    // faces
+    std::vector<Halfedge_Mesh::FaceRef> f;
+    f.push_back(e->halfedge()->face());
+    f.push_back(e->halfedge()->twin()->face());
+
+    // Phase2: Create
+    VertexRef v4 = new_vertex(); 
+    v4->pos = (v[0]->pos + v[1]->pos) * 0.5f;
+    EdgeRef ne0 = new_edge();
+    EdgeRef ne1 = new_edge();
+    // Phase3: Reassign 
+    
+    // halfedge
+    for (auto hp = s0.begin(); hp<s0.end();++hp) {
+        auto h = *hp;
+        // don't alter halfedges sheduled for deletion
+        if(is_in_list(h, l0) || is_in_list(h, l1)) 
+            continue;
+
+        h->next() = h->next();
+        if(is_in_list(h->twin(), l0)) {
+            auto nt = next_twin(h, l0, l1);
+            h->twin() = nt;
+            nt->twin() = h;
+        } else if(is_in_list(h->twin(), l1)) {
+            auto nt = next_twin(h, l1, l0);
+            h->twin() = nt;
+            nt->twin() = h;
+        } 
+        else {
+            h->twin() = h->twin();
+        }
+        if(h->vertex() == v[1] || h->vertex() == v[0]) {
+            h->vertex() = v4;
+            v4->halfedge() = h;
+        } else {
+            h->vertex() = h->vertex();
+        }
+        if(is_in_list(h->edge(), pde)) {
+            h->edge() = ne0;
+            ne0->halfedge() = h;
+            h->twin()->edge() = ne0;
+        } else {
+            h->edge() = h->edge();
+        } 
+        h->face() = h->face();
+    }
+
+    for(auto hp = s1.begin(); hp < s1.end(); ++hp) {
+        auto h = *hp;
+        // don't change halfedges sheduled for deletion
+        if(is_in_list(h, l0) || is_in_list(h, l1)) 
+            continue;
+
+        h->next() = h->next();
+        if(is_in_list(h->twin(), l0)) {
+            auto nt = next_twin(h, l0, l1);
+            h->twin() = nt;
+            nt->twin() = h;
+        } else if(is_in_list(h->twin(), l1)) {
+            auto nt = next_twin(h, l1, l0);
+            h->twin() = nt;
+            nt->twin() = h;
+        } else {
+            h->twin() = h->twin();
+        }
+        if(h->vertex() == v[1] || h->vertex() == v[0]) {
+            h->vertex() = v4;
+            v4->halfedge() = h;
+        } else {
+            h->vertex() = h->vertex();
+        }
+        if(is_in_list(h->edge(), pde)) {
+            h->edge() = ne1;
+            ne1->halfedge() = h;
+            h->twin()->edge() = ne1;
+        } else {
+            h->edge() = h->edge();
+        }
+        
+        h->face() = h->face();     
+    }
+   
+    for(auto hp = pdh.begin(); hp != pdh.end(); ++hp) {
+        erase(*hp);
+    }
+    for (auto et = pde.begin(); et != pde.end(); ++et) 
+        erase(*et);
+
+    erase(f[0]);
+    erase(f[1]);
+    
+    erase(v[0]);
+    erase(v[1]);
+    
+    return std::optional(v4);
 }
 
 /*
