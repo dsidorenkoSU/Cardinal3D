@@ -412,11 +412,11 @@ std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::split_edge(Halfedge_Mesh:
     // const vs non const ref? 
     // 0. 
     if (e->halfedge() != e->halfedge()->next()->next()->next()){
-        std::cout << "not a traingle mesh" << std::endl; 
+        std::cout << "not a traingle mesh or boundary -> no ops" << std::endl; 
         return std::nullopt;
     }
     if (e->halfedge()->twin() != e->halfedge()->twin()->next()->next()->next()){
-        std::cout << "not a traingle mesh" << std::endl; 
+        std::cout << "not a traingle mesh or boundary -> no ops" << std::endl; 
         return std::nullopt;
     }
     // 1. 
@@ -1054,7 +1054,7 @@ struct Edge_Record {
     }
     Edge_Record(std::unordered_map<Halfedge_Mesh::VertexRef, Mat4>& vertex_quadrics,
                 Halfedge_Mesh::EdgeRef e)
-        : edge(e) {
+        : edge(e) { // initialize Edge_record edge to e 
 
         // Compute the combined quadric from the edge endpoints.
         // -> Build the 3x3 linear system whose solution minimizes the quadric error
@@ -1074,7 +1074,8 @@ bool operator<(const Edge_Record& r1, const Edge_Record& r2) {
     if(r1.cost != r2.cost) {
         return r1.cost < r2.cost;
     }
-    Halfedge_Mesh::EdgeRef e1 = r1.edge;
+    // if equal....? what does &*e1 mean? 
+    Halfedge_Mesh::EdgeRef e1 = r1.edge; 
     Halfedge_Mesh::EdgeRef e2 = r2.edge;
     return &*e1 < &*e2;
 }
@@ -1166,7 +1167,7 @@ bool Halfedge_Mesh::simplify() {
     std::unordered_map<VertexRef, Mat4> vertex_quadrics;
     std::unordered_map<FaceRef, Mat4> face_quadrics;
     std::unordered_map<EdgeRef, Edge_Record> edge_records;
-    PQueue<Edge_Record> edge_queue;
+    PQueue<Edge_Record> edge_queue; 
 
     // Compute initial quadrics for each face by simply writing the plane equation
     // for the face in homogeneous coordinates. These quadrics should be stored
