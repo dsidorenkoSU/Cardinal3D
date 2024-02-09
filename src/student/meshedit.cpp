@@ -266,115 +266,92 @@ std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::collapse_face(Halfedge_Me
 */
 std::optional<Halfedge_Mesh::EdgeRef> Halfedge_Mesh::flip_edge(Halfedge_Mesh::EdgeRef e) {
 
+     /* Steps (by Dmitrii):
+     *        
+     *     v2  *--------* v1, vne
+     *         /         /
+     *        /         /
+     *       /         /
+     * v3,vs *-------- * v0
+     *       \   e   / 
+     *        \     /
+     *         \   /
+     *          \ /
+     *           * 
+     *           v4, vns
+     * 0. Collecting affected halfedges of edge e and affected points v0, v1
+     * 1. Create edge (and two half edges) between points v1, v4
+     * 2. Connect new halfedges and edge to existing graph
+     * 2. Delete edge e and all references to it from halfedges
+     */
+
+    // Phase 0: Collect
     // HALFEDGES
     HalfedgeRef h0 = e->halfedge();
-    HalfedgeRef h1 = h0->next();
-    HalfedgeRef h2 = h1->next();
-    HalfedgeRef h3 = h0->twin();
-    HalfedgeRef h4 = h3->next();
-    HalfedgeRef h5 = h4->next();
-    HalfedgeRef h6 = h1->twin();
-    HalfedgeRef h7 = h2->twin();
-    HalfedgeRef h8 = h4->twin();
-    HalfedgeRef h9 = h5->twin();
+    HalfedgeRef h1 = h0->twin();
+    HalfedgeRef ht = h0;
+    do {
+        ht = ht->next();
+    } while(ht->next() != e->halfedge());
+    HalfedgeRef h0e = ht;
+
+    ht = h1;
+    do {
+        ht = ht->next();
+    } while(ht->next() != h1);
+    HalfedgeRef h1e = ht;
 
     // VERTICES
-    VertexRef v0 = h0->vertex();
-    VertexRef v1 = h3->vertex();
-    VertexRef v2 = h5->vertex();
-    VertexRef v3 = h2->vertex();
-
-    // EDGES
-    EdgeRef e0 = h0->edge();
-    EdgeRef e1 = h9->edge();
-    EdgeRef e2 = h8->edge();
-    EdgeRef e3 = h7->edge();
-    EdgeRef e4 = h6->edge();
-
+    VertexRef vns = e->halfedge()->twin()->next()->next()->vertex();
+    VertexRef vne = e->halfedge()->next()->next()->vertex();
+    
     // FACES
     FaceRef f0 = h0->face();
-    FaceRef f1 = h3->face();
+    FaceRef f1 = h1->face();
 
-    // HALFEDGES
-    h0->next() = h1;
-    h0->twin() = h3;
-    h0->vertex() = v2;
-    h0->edge() = e0;
-    h0->face() = f0;
+    // Phase 1: Create 
+    HalfedgeRef nh0 = new_halfedge();
+    HalfedgeRef nh1 = new_halfedge();
+    EdgeRef ne = new_edge();
 
-    h1->next() = h2;
-    h1->twin() = h7;
-    h1->vertex() = v3;
-    h1->edge() = e3;
-    h1->face() = f0;
-    
-    h2->next() = h0;
-    h2->twin() = h8;
-    h2->vertex() = v0;
-    h2->edge() = e2;
-    h2->face() = f0;
+    // Phase 2: Connect new halfedges and edge
+    h0e->next() = h1->next();
 
-    h3->next() = h4;
-    h3->twin() = h0;
-    h3->vertex() = v3;
-    h3->edge() = e0;
-    h3->face() = f1;
+    nh0->next() = e->halfedge()->next()->next();
+    nh0->twin() = nh1;
+    nh0->vertex() = vns;
+    nh0->edge() = ne;
+    nh0->face() = f0;
 
-    h4->next() = h5;
-    h4->twin() = h9;
-    h4->vertex() = v2;
-    h4->edge() = e1;
-    h4->face() = f1;
+    h0->next()->next() = nh1;
+    h0->next()->face() = f1;
+    h1e->next() = h0->next();
 
-    h5->next() = h3;
-    h5->twin() = h6;
-    h5->vertex() = v1;
-    h5->edge() = e4;
-    h5->face() = f1;
+    nh1->next() = e->halfedge()->twin()->next()->next();
+    nh1->twin() = nh0;
+    nh1->vertex() = vne;
+    nh1->edge() = ne;
+    nh1->face() = f1;
+    h1->next()->next() = nh0;
+    h1->next()->face() = f0;
 
-    h6->next() = h6->next();
-    h6->twin() = h5;
-    h6->vertex() = v3;
-    h6->edge() = e4;
-    h6->face() = h6->face();
+    // Vertexes 
+    h0->vertex()->halfedge() = h1->next();
+    h1->vertex()->halfedge() = h0->next();
 
-    h7->next() = h7->next();
-    h7->twin() = h1;
-    h7->vertex() = v0;
-    h7->edge() = e3;
-    h7->face() = h7->face();
+    // edges
+    ne->halfedge() = nh0;
 
-    h8->next() = h8->next();
-    h8->twin() = h2;
-    h8->vertex() = v2;
-    h8->edge() = e2;
-    h8->face() = h8->face();
+    // faces
+    f0->halfedge() = nh0;
+    f1->halfedge() = nh1;
 
-    h9->next() = h9->next(); // didn't change, but set it anyway!
-    h9->twin() = h4;
-    h9->vertex() = v1;
-    h9->edge() = e1;
-    h9->face() = h9->face(); // didn't change, but set it anyway!
+    // Phase 3: erase old edge and halfedges
+    erase(h0);
+    erase(h1);
+    erase(e);
 
-    // VERTICES
-    v0->halfedge() = h2;
-    v1->halfedge() = h5;
-    v2->halfedge() = h0;
-    v3->halfedge() = h3;
-
-    // EDGES
-    e0->halfedge() = h0; 
-    e1->halfedge() = h4; 
-    e2->halfedge() = h2; 
-    e3->halfedge() = h7; 
-    e4->halfedge() = h6; 
-
-    // FACES
-    f0->halfedge() = h0; 
-    f1->halfedge() = h3;
-
-    (void)e;
-    return std::optional(e0);
+    return std::optional(ne);
 }
 
 /*
