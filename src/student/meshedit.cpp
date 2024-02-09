@@ -266,7 +266,7 @@ std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::collapse_face(Halfedge_Me
 */
 std::optional<Halfedge_Mesh::EdgeRef> Halfedge_Mesh::flip_edge(Halfedge_Mesh::EdgeRef e) {
 
-     /* Steps (by Dmitrii):
+/* Steps (by Dmitrii):
      *        
      *     v2  *--------* v1, vne
      *         /         /
@@ -304,7 +304,7 @@ std::optional<Halfedge_Mesh::EdgeRef> Halfedge_Mesh::flip_edge(Halfedge_Mesh::Ed
     // VERTICES
     VertexRef vns = e->halfedge()->twin()->next()->next()->vertex();
     VertexRef vne = e->halfedge()->next()->next()->vertex();
-    
+
     // FACES
     FaceRef f0 = h0->face();
     FaceRef f1 = h1->face();
@@ -326,7 +326,7 @@ std::optional<Halfedge_Mesh::EdgeRef> Halfedge_Mesh::flip_edge(Halfedge_Mesh::Ed
     h0->next()->next() = nh1;
     h0->next()->face() = f1;
     h1e->next() = h0->next();
-
+    
     nh1->next() = e->halfedge()->twin()->next()->next();
     nh1->twin() = nh0;
     nh1->vertex() = vne;
@@ -343,7 +343,7 @@ std::optional<Halfedge_Mesh::EdgeRef> Halfedge_Mesh::flip_edge(Halfedge_Mesh::Ed
     ne->halfedge() = nh0;
 
     // faces
-    f0->halfedge() = nh0;
+    f0->halfedge() = nh0; 
     f1->halfedge() = nh1;
 
     // Phase 3: erase old edge and halfedges
@@ -389,11 +389,11 @@ std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::split_edge(Halfedge_Mesh:
     // const vs non const ref? 
     // 0. 
     if (e->halfedge() != e->halfedge()->next()->next()->next()){
-        std::cout << "not a traingle mesh or boundary -> no ops" << std::endl; 
+        std::cout << "not a traingle mesh or it's boundary -> no ops" << std::endl; 
         return std::nullopt;
     }
     if (e->halfedge()->twin() != e->halfedge()->twin()->next()->next()->next()){
-        std::cout << "not a traingle mesh or boundary -> no ops" << std::endl; 
+        std::cout << "not a traingle mesh or it's boundary -> no ops" << std::endl; 
         return std::nullopt;
     }
     // 1. 
@@ -602,7 +602,7 @@ std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::bevel_face(Halfedge_Mesh::F
         HalfedgeRef half_origin = new_halfedges[i];
         VertexRef vertex_a = half_origin->vertex(); 
         
-        // create 1 new face, 2 edges, 4 half edges, 1 vertex 
+        // create 1 new face, 2 edges, 4 half edges, 1 vertex    
         FaceRef face_connect = new_face(); 
         EdgeRef edge_connect = new_edge(); 
         EdgeRef edge_new = new_edge(); 
@@ -916,10 +916,10 @@ void Halfedge_Mesh::linear_subdivide_positions() {
     // of the original vertex positions to Face::new_pos. Note
     // that in general, NOT all faces will be triangles!
     for(FaceRef f = faces_begin(); f != faces_end(); f++) {
-        
+
         
         f->new_pos = f->center();
-        
+
     }
 }
 
