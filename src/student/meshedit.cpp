@@ -1052,7 +1052,6 @@ void Halfedge_Mesh::catmullclark_subdivide_positions() {
        R /= (float)vedges.size();
 
 
-
        v->new_pos = (Q + 2*R + (vfaces.size()-3) * v->pos) / (float)vfaces.size();
     }
 }

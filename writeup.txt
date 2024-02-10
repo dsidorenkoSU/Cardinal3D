@@ -15,11 +15,11 @@ Work:
 
 Description: 
 - FaceBevel: N/A
-- EdgeCollapse: 
+- EdgeCollapse: Implemented and tested on sphere and cube and cow. It works fine on the initial meshes but sometimes doesn't work on second or third collapse. 
 - EdgeFlip: 
 - EdgeSplit: if non-triangle faces next to edge or it's boundary, no operation 
-- Triangulation:
+- Triangulation: Implemented all the functionality but it leaves some extra next links between halfedges. Will be fixed in after initial deadline 
 - LinearSubdivision: N/A 
-- CatmullClarkSubdivision: 
+- CatmullClarkSubdivision: Implemented and tested on cube and dodecahedron models
 - Simplification: implement all the functionality, but couldn't get it to work. 
 - Model: 
