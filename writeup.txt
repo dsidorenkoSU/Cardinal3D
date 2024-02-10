@@ -1,0 +1,25 @@
+Names: 
+- Dmitrii Sidorenko, SUnetID: dsidko
+- Ting Chia (Jerry) Chang, SunetID: tcchang3
+
+Work: 
+- FaceBevel by Jerry 
+- EdgeCollapse by Dmitrii
+- EdgeFlip by Dmitrii
+- EdgeSplit by Jerry
+- Triangulation by Dmitrii
+- LinearSubdivision by Jerry 
+- CatmullClarkSubdivision by Dmitrii
+- Simplification by Jerry
+- Model by Dmitrii
+
+Description: 
+- FaceBevel: N/A
+- EdgeCollapse: 
+- EdgeFlip: 
+- EdgeSplit: if non-triangle faces next to edge or it's boundary, no operation 
+- Triangulation:
+- LinearSubdivision: N/A 
+- CatmullClarkSubdivision: 
+- Simplification: implement all the functionality, but couldn't get it to work. 
+- Model: 

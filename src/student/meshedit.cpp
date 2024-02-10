@@ -121,7 +121,7 @@ std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::collapse_edge(Halfedge_Me
         pdh.push_back(*it);
     }
 
-    //halfedges and edges to erase
+    // halfedges and edges to erase
     std::vector<Halfedge_Mesh::EdgeRef> pde, ea;
     pde.push_back(e);
     for (auto it = l0.begin(); it < l0.end(); ++it){
@@ -248,6 +248,7 @@ std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::collapse_edge(Halfedge_Me
     erase(v[1]);
     
     return std::optional(v4);
+    //return v4;
 }
 
 /*
@@ -495,7 +496,7 @@ std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::split_edge(Halfedge_Mesh:
     // std::cout << "middle: " << pos_middle << std::endl << std::endl; 
 
     // (void)e;
-    return vertex_m;
+    return std::optional(vertex_m);
 }
 
 /* Note on the beveling process:
@@ -693,7 +694,7 @@ std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::bevel_face(Halfedge_Mesh::F
     // 4. update f halfedge 
     f->halfedge() = f->halfedge()->next()->next()->twin();
 
-    return f;
+    return std::optional(f);
 }
 /*
     Compute new vertex positions for the vertices of the beveled vertex.
@@ -799,7 +800,9 @@ void Halfedge_Mesh::bevel_face_positions(const std::vector<Vec3>& start_position
         h = h->next();
     } while(h != face->halfedge());
 
-    // find the normal vector of the original plane
+    // find the normal vector of the face
+    //Vec3 v10 = new_halfedges[1]->vertex()->pos - new_halfedges[0]->vertex()->pos; 
+    //Vec3 v20 = new_halfedges[2]->vertex()->pos - new_halfedges[0]->vertex()->pos; // start_positions[2]-start_positions[0]; 
     Vec3 v10 = start_positions[1]-start_positions[0]; 
     Vec3 v20 = start_positions[2]-start_positions[0]; 
     Vec3 normal = cross(v10, v20).unit();  
@@ -823,7 +826,6 @@ void Halfedge_Mesh::bevel_face_positions(const std::vector<Vec3>& start_position
         Vec3 temp_vec = pi.operator+(normal.operator*(-normal_offset));
         Vec3 tangent = ((pi_next.operator-(pi)).operator+(pi_pre.operator-(pi))).unit(); 
         new_halfedges[i]->vertex()->pos = temp_vec.operator+(tangent.operator*(-tangent_offset));
-        // sign = -sign;
     }
     // std::cout << normal_offset << std::endl;
     // std::cout << tangent_offset << std::endl << std::endl;
@@ -1034,12 +1036,26 @@ struct Edge_Record {
         : edge(e) { // initialize Edge_record edge to e 
 
         // Compute the combined quadric from the edge endpoints.
+
+        Halfedge_Mesh::VertexRef v1 = e->halfedge()->vertex(); 
+        Halfedge_Mesh::VertexRef v2 = e->halfedge()->twin()->vertex();
+        Mat4 Q1 = vertex_quadrics.at(v1);
+        Mat4 Q2 = vertex_quadrics.at(v2);
+
+        //  
         // -> Build the 3x3 linear system whose solution minimizes the quadric error
         //    associated with these two endpoints.
+        Mat4 Qopt = (Q1.operator+(Q2)).operator*(0.5f); // use error at mid point for now
+
         // -> Use this system to solve for the optimal position, and store it in
         //    Edge_Record::optimal.
+        Edge_Record::optimal = 0.5f*(v1->pos + v2->pos); // use mid point for now 
         // -> Also store the cost associated with collapsing this edge in
         //    Edge_Record::cost.
+
+        Vec4 u(optimal.x, optimal.y, optimal.z, 1.0);
+        Vec4 u_Qopt(dot(u, Qopt.operator[](0)), dot(u, Qopt.operator[](1)), dot(u, Qopt.operator[](2)), dot(u, Qopt.operator[](3))); 
+        Edge_Record::cost = dot(u_Qopt, u);
     }
     Halfedge_Mesh::EdgeRef edge;
     Vec3 optimal;
@@ -1149,17 +1165,144 @@ bool Halfedge_Mesh::simplify() {
     // Compute initial quadrics for each face by simply writing the plane equation
     // for the face in homogeneous coordinates. These quadrics should be stored
     // in face_quadrics
+    for(FaceRef f = faces_begin(); f != faces_end(); f++) {
+        // to find plane equation   
+        Vec3 p0 = f->halfedge()->vertex()->pos; 
+        Vec3 p1 = f->halfedge()->next()->vertex()->pos;
+        Vec3 p2 = f->halfedge()->next()->next()->vertex()->pos;
+        Vec3 p3 = f->halfedge()->next()->next()->next()->vertex()->pos;
+
+        // check if traingle only mesh 
+        if (p0 != p3) {
+            std::cout << "not a traingle only mesh!" << std::endl; 
+            return false;
+        }
+        
+        Vec3 normal = cross((p1.operator-(p0)), (p2.operator-(p0))); 
+        float d = -dot(normal, p0); 
+
+        Vec4 col1(normal.x*normal.x, normal.y*normal.x, normal.x*normal.z, normal.x*d);
+        Vec4 col2(normal.x*normal.y, normal.y*normal.y, normal.y*normal.z, normal.y*d);
+        Vec4 col3(normal.x*normal.z, normal.y*normal.z, normal.z*normal.z, normal.z*d);
+        Vec4 col4(normal.x*d, normal.y*d, normal.z*d, d*d);
+
+        Mat4 Q(col1, col2, col3, col4);  
+        face_quadrics[f] = Q; 
+    }
+
     // -> Compute an initial quadric for each vertex as the sum of the quadrics
     //    associated with the incident faces, storing it in vertex_quadrics
+    for (VertexRef v = vertices_begin(); v != vertices_end(); v++) {
+
+        // loop through face surrounding v 
+        HalfedgeRef h = v->halfedge();
+        Mat4 Q_sum = Mat4::Zero;  
+        do {
+            FaceRef f_tmp = h->face(); 
+             // Searching for key
+            Q_sum = Q_sum.operator+=(face_quadrics.at(f_tmp));
+            h = h->twin()->next();
+        } while(h != v->halfedge());
+        //std::cout << v->degree() << std::endl;
+
+        vertex_quadrics[v] = Q_sum;
+    }
+
     // -> Build a priority queue of edges according to their quadric error cost,
     //    i.e., by building an Edge_Record for each edge and sticking it in the
     //    queue. You may want to use the above PQueue<Edge_Record> for this.
+    int count = 0; 
+    for (EdgeRef e = edges_begin(); e != edges_end(); e++) {
+        Edge_Record edge_r(vertex_quadrics, e); 
+        edge_records[e] = edge_r;
+        edge_queue.insert(edge_r); 
+        count++; // count the total number of edge 
+    }
+
+    if (count < 30) {
+        std::cout << "Cant simplify anymore!" << std::endl; 
+        return false; 
+    }
+    
     // -> Until we reach the target edge budget, collapse the best edge. Remember
     //    to remove from the queue any edge that touches the collapsing edge
     //    BEFORE it gets collapsed, and add back into the queue any edge touching
     //    the collapsed vertex AFTER it's been collapsed. Also remember to assign
     //    a quadric to the collapsed vertex, and to pop the collapsed edge off the
     //    top of the queue.
+    int target_num = count/2; 
+    for (int i = 0; i < target_num; i++) {
+        Edge_Record e_rm_record = edge_queue.top();
+        EdgeRef e_rm = e_rm_record.edge; 
+        VertexRef v1 = e_rm->halfedge()->vertex(); 
+        VertexRef v2 = e_rm->halfedge()->twin()->vertex(); 
+
+        // loop through edge surrounding v1 and remove e_tmp from queue but not e_rm 
+        HalfedgeRef h1 = v1->halfedge();
+        // int count_temp = 0; 
+        do {
+            EdgeRef e_tmp = h1->edge(); 
+            if (e_tmp != e_rm) {
+                edge_queue.remove(edge_records[e_tmp]); 
+                edge_records.erase(e_tmp); 
+            }
+            h1 = h1->twin()->next();
+            // std::cout << count_temp << std::endl; 
+        } while(h1 != v1->halfedge());
+
+        // loop through edge surrounding v2 and remove e_tmp from queue but not e_rm
+        HalfedgeRef h2 = v2->halfedge();
+        int count_temp = 0; 
+        do {
+            EdgeRef e_tmp = h2->edge(); 
+            if (e_tmp != e_rm) {
+                edge_queue.remove(edge_records[e_tmp]); 
+                edge_records.erase(e_tmp); 
+            }
+            h2 = h2->twin()->next();
+            //std::cout << count_temp << std::endl; 
+        } while(h2 != v2->halfedge());
+        
+        std::cout << i << std::endl << std::endl; 
+        vertex_quadrics.erase(v1); 
+        vertex_quadrics.erase(v2); 
+
+        // add back into the queue any edge touching the collapsed vertex 
+        VertexRef v_new = collapse_edge(e_rm).value(); // have to use collapse_edge here instead of collapse_edge_erase() to avoid crash, because Dimitri wrote erase in collas_edge already? 
+        HalfedgeRef h = v_new->halfedge();
+        Mat4 Q_sum = Mat4::Zero;  
+        
+        do { // calculate the Q of new vertex 
+            FaceRef f = h->face(); 
+            Vec3 p0 = f->halfedge()->vertex()->pos; 
+            Vec3 p1 = f->halfedge()->next()->vertex()->pos;
+            Vec3 p2 = f->halfedge()->next()->next()->vertex()->pos;
+            Vec3 normal = cross((p1.operator-(p0)), (p2.operator-(p0))); 
+            float d = -dot(normal, p0); 
+
+            Vec4 col1(normal.x*normal.x, normal.y*normal.x, normal.x*normal.z, normal.x*d);
+            Vec4 col2(normal.x*normal.y, normal.y*normal.y, normal.y*normal.z, normal.y*d);
+            Vec4 col3(normal.x*normal.z, normal.y*normal.z, normal.z*normal.z, normal.z*d);
+            Vec4 col4(normal.x*d, normal.y*d, normal.z*d, d*d);
+            Mat4 Q(col1, col2, col3, col4);  
+
+            Q_sum = Q_sum.operator+=(Q);
+            h = h->twin()->next();
+            count_temp++;
+        } while(h != v_new->halfedge());
+        vertex_quadrics[v_new] = Q_sum;
+        std::cout << count_temp << std::endl; 
+
+        h = v_new->halfedge();
+        do { // loop through edge of new vertex and add to queue 
+            Edge_Record edge_r(vertex_quadrics, h->edge()); 
+            edge_records[h->edge()] = edge_r;
+            edge_queue.insert(edge_r); 
+            h = h->twin()->next();
+        } while(h != v_new->halfedge());
+
+        edge_queue.remove(e_rm_record); // remove collapsed edge 
+    }
 
     // Note: if you erase elements in a local operation, they will not be actually deleted
     // until do_erase or validate are called. This is to facilitate checking
@@ -1167,6 +1310,6 @@ bool Halfedge_Mesh::simplify() {
     // The rest of the codebase will automatically call validate() after each op,
     // but here simply calling collapse_edge() will not erase the elements.
     // You should use collapse_edge_erase() instead for the desired behavior.
-
-    return false;
+    
+    return true;
 }

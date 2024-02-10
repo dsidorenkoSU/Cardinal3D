@@ -433,6 +433,7 @@ public:
             return _id;
         }
 
+
     private:
         Face(unsigned int id, bool is_boundary) : _id(id), boundary(is_boundary) {
         }
@@ -441,6 +442,7 @@ public:
         HalfedgeRef _halfedge;
         bool boundary = false;
         friend class Halfedge_Mesh;
+
     };
 
     class Halfedge {
