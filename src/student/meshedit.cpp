@@ -1263,7 +1263,7 @@ bool Halfedge_Mesh::simplify() {
             //std::cout << count_temp << std::endl; 
         } while(h2 != v2->halfedge());
         
-        std::cout << i << std::endl << std::endl; 
+        // std::cout << i << std::endl << std::endl; 
         vertex_quadrics.erase(v1); 
         vertex_quadrics.erase(v2); 
 
@@ -1291,7 +1291,7 @@ bool Halfedge_Mesh::simplify() {
             count_temp++;
         } while(h != v_new->halfedge());
         vertex_quadrics[v_new] = Q_sum;
-        std::cout << count_temp << std::endl; 
+        // std::cout << count_temp << std::endl; 
 
         h = v_new->halfedge();
         do { // loop through edge of new vertex and add to queue 
