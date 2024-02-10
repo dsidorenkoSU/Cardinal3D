@@ -836,7 +836,82 @@ void Halfedge_Mesh::bevel_face_positions(const std::vector<Vec3>& start_position
 */
 void Halfedge_Mesh::triangulate() {
 
-    // For each face...
+    for (FaceRef f = faces_begin(); f != faces_end(); ++f) {
+        
+        // Collect half edges
+        std::vector<HalfedgeRef> h;
+        HalfedgeRef t = f->halfedge();
+        do {
+            h.push_back(t);
+            t = t->next();
+        } 
+        while (t != f->halfedge());
+        
+        // Skip triangles  
+        if (h.size() <=3 ) {
+            continue;
+        }
+
+        // Collect vertices 
+        VertexRef v0 = f->halfedge()->vertex();
+
+        // Triangulate convex polygon
+        // for each halfedge (except first and last) 
+        // do the following steps
+        // 1. Create edge and two halfedges  
+        // 2. Create face
+        // 3. Link them together 
+        HalfedgeRef ph = h[0];
+        std::vector<FaceRef> nf;
+        for(int i = 1; i < h.size() - 1; ++i) {
+            EdgeRef ne = new_edge();
+            
+            HalfedgeRef nh0 = new_halfedge();
+            HalfedgeRef nh1 = new_halfedge();
+
+            nf.push_back(new_face());
+
+            // Assign halfedges
+            h[i]->next() = nh0;
+            h[i]->twin() = h[i]->twin();
+            h[i]->vertex() = h[i]->vertex();
+            h[i]->edge() = h[i]->edge();
+            h[i]->face() = nf.back();
+
+            nh0->next() = ph;
+            nh0->twin() = nh1;
+            nh0->vertex() = h[i]->next()->vertex();
+            nh0->edge() = ne;
+            nh0->face() = nf.back();
+
+            nh1->next() = h[i+1];
+            nh1->twin() = nh0;
+            nh1->vertex() = v0;
+            nh1->edge() = ne;
+            //nh1->face() = <--- will be created on the next iteration
+            
+            ph->face() = nf.back();
+
+            // assign edge
+            ne->halfedge() = nh0;
+
+            // assign face
+            nf.back()->halfedge() = ph;
+            
+            EdgeRef ei = h[i]->edge();
+            ei->halfedge() = ei->halfedge();
+
+            // Track previous halfedge
+            ph = nh1;
+        }
+
+        ph->face() = nf.back();
+        h[0]->face() = nf[0];
+        h.back()->face() = nf.back();
+
+        // Delete old face
+        erase(f);
+    }
 }
 
 /* Note on the quad subdivision process:
@@ -937,17 +1012,49 @@ void Halfedge_Mesh::linear_subdivide_positions() {
 */
 void Halfedge_Mesh::catmullclark_subdivide_positions() {
 
-    // The implementation for this routine should be
-    // a lot like Halfedge_Mesh:linear_subdivide_positions:(),
-    // except that the calculation of the positions themsevles is
-    // slightly more involved, using the Catmull-Clark subdivision
-    // rules. (These rules are outlined in the Developer Manual.)
+    // For each face, assign the centroid (i.e., arithmetic mean)
+    for(FaceRef f = faces_begin(); f != faces_end(); f++) {
 
-    // Faces
+        f->new_pos = f->center();
+    }
 
     // Edges
+    for(EdgeRef e = edges_begin(); e != edges_end(); e++) {
 
-    // Vertices
+        e->new_pos = e->center();
+    }
+
+    // For each vertex, assign Vertex::new_pos to
+    // its original position, Vertex::pos.
+    for(VertexRef v = vertices_begin(); v != vertices_end(); v++) {
+        
+       std::vector<FaceRef> vfaces;
+       HalfedgeRef href = v->halfedge(); 
+       std::vector<EdgeRef> vedges;
+       std::vector<VertexRef> vvert;
+
+       do {
+          vfaces.push_back(href->face());
+          vedges.push_back(href->edge());
+          vvert.push_back(href->twin()->vertex());
+          href = href->twin()->next();
+       } while(href != v->halfedge());
+
+       Vec3 Q;
+       for (std::vector<FaceRef>::const_iterator cf = vfaces.begin(); cf != vfaces.end(); ++cf){
+          Q += (*cf)->new_pos;
+       }
+       Q /= (float)vfaces.size();
+       Vec3 R;
+       for (std::vector<EdgeRef>::const_iterator er = vedges.begin(); er != vedges.end(); ++er){
+          R += (*er)->new_pos;
+       }
+       R /= (float)vedges.size();
+
+
+
+       v->new_pos = (Q + 2*R + (vfaces.size()-3) * v->pos) / (float)vfaces.size();
+    }
 }
 
 /*

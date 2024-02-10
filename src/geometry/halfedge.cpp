@@ -5,7 +5,7 @@
 #include <set>
 #include <sstream>
 #include <unordered_map>
-
+#include <iostream>
 #include "../gui/widgets.h"
 
 Halfedge_Mesh::Halfedge_Mesh() {
@@ -376,7 +376,7 @@ std::optional<std::pair<Halfedge_Mesh::ElementRef, std::string>> Halfedge_Mesh::
     }
 
     std::set<HalfedgeRef> permutation;
-
+    std::map<HalfedgeRef, HalfedgeRef> p;
     // Check valid halfedge permutation
     for(HalfedgeRef h = halfedges_begin(); h != halfedges_end(); h++) {
 
@@ -401,7 +401,11 @@ std::optional<std::pair<Halfedge_Mesh::ElementRef, std::string>> Halfedge_Mesh::
         // Check whether each halfedge's next points to a unique halfedge
         if(permutation.find(h->next()) == permutation.end()) {
             permutation.insert(h->next());
+            p.insert(std::make_pair(h->next(), h));
         } else {
+            HalfedgeRef first = p[h->next()];
+            std::cout << "First next: " << first->id() << " first v:" << first->vertex()->pos.x
+                      << "," << first->vertex()->pos.y << "," << first->vertex()->pos.z<< std::endl;
             return {{h->next(), "A halfedge is the next of multiple halfedges!"}};
         }
     }
