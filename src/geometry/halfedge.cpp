@@ -403,9 +403,11 @@ std::optional<std::pair<Halfedge_Mesh::ElementRef, std::string>> Halfedge_Mesh::
             permutation.insert(h->next());
             p.insert(std::make_pair(h->next(), h));
         } else {
+            std::cout << "Halfedge:" << h->id() << std::endl;
             HalfedgeRef first = p[h->next()];
             std::cout << "First next: " << first->id() << " first v:" << first->vertex()->pos.x
                       << "," << first->vertex()->pos.y << "," << first->vertex()->pos.z<< std::endl;
+            std::cout << "Second next:" << h->next()->id() << std::endl;
             return {{h->next(), "A halfedge is the next of multiple halfedges!"}};
         }
     }

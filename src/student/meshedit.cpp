@@ -851,10 +851,11 @@ void Halfedge_Mesh::triangulate() {
         if (h.size() <=3 ) {
             continue;
         }
-
+        Vec3 fn = f->normal();
         // Collect vertices 
         VertexRef v0 = f->halfedge()->vertex();
-
+        VertexRef vn = h[h.size() - 1]->vertex();
+        
         // Triangulate convex polygon
         // for each halfedge (except first and last) 
         // do the following steps
@@ -862,35 +863,46 @@ void Halfedge_Mesh::triangulate() {
         // 2. Create face
         // 3. Link them together 
         HalfedgeRef ph = h[0];
+        HalfedgeRef hi = h[1];
+        HalfedgeRef h_i1 = hi->next();
         std::vector<FaceRef> nf;
-        for(size_t i = 1; i < h.size() - 1; ++i) {
+        std::vector<HalfedgeRef> nh;
+        while (hi->next()->next() != f->halfedge()) {
+         
+            h_i1 = hi->next();
+            
             EdgeRef ne = new_edge();
             
             HalfedgeRef nh0 = new_halfedge();
             HalfedgeRef nh1 = new_halfedge();
+            nh.push_back(nh0);
+            nh.push_back(nh1);
 
             nf.push_back(new_face());
 
-            // Assign halfedges
-            h[i]->next() = nh0;
-            h[i]->twin() = h[i]->twin();
-            h[i]->vertex() = h[i]->vertex();
-            h[i]->edge() = h[i]->edge();
-            h[i]->face() = nf.back();
-
             nh0->next() = ph;
             nh0->twin() = nh1;
-            nh0->vertex() = h[i]->next()->vertex();
+            nh0->vertex() = hi->next()->vertex();
             nh0->edge() = ne;
             nh0->face() = nf.back();
 
-            nh1->next() = h[i+1];
+            nh1->next() = hi;
             nh1->twin() = nh0;
             nh1->vertex() = v0;
             nh1->edge() = ne;
+
+            // Assign halfedges
+            hi->next() = nh0;
+            hi->twin() = hi->twin();
+            //hi->vertex() = hi->vertex();
+            hi->edge() = hi->edge();
+            hi->face() = nf.back();
+
+            
             //nh1->face() = <--- will be created on the next iteration
             
             ph->face() = nf.back();
+            ph->next() = hi;
 
             // assign edge
             ne->halfedge() = nh0;
@@ -898,20 +910,62 @@ void Halfedge_Mesh::triangulate() {
             // assign face
             nf.back()->halfedge() = ph;
             
-            EdgeRef ei = h[i]->edge();
+            EdgeRef ei = hi->edge();
             ei->halfedge() = ei->halfedge();
 
             // Track previous halfedge
             ph = nh1;
+            hi = h_i1;
         }
-
+        nh[nh.size() - 1]->next() = h[h.size() - 2];
+        h[h.size() - 1]->next() = nh[nh.size()-1];
+        
+        // Face normal is looking inside the shape
+        // So we flip vertex positions
         ph->face() = nf.back();
         h[0]->face() = nf[0];
+        h[h.size() - 1]->face() = nf.back();
+        h[h.size() - 2]->face() = nf.back();
+        
         h.back()->face() = nf.back();
 
+        nf.push_back(new_face());
+        FaceRef lf = nf.back();
+        HalfedgeRef lhr = nh.back();
+        HalfedgeRef lhr_1 = lhr->next();
+        HalfedgeRef lhr_2 = lhr_1->next();
+        lhr->face() = lf;
+        lhr_1->face() = lf;
+        lhr_2->face() = lf;
+        lf->halfedge() = lhr;
+
+        for(std::vector<FaceRef>::iterator fr = nf.begin(); fr != nf.end(); ++fr) {
+            float d = dot((*fr)->normal(), fn);
+            if (d < 0.0f) {
+                std::cout << "Flipped face" << std::endl;
+            }
+        }
         // Delete old face
         erase(f);
     }
+}
+
+bool Halfedge_Mesh::print() {
+    std::cout << "Halfedges " << std::endl;
+    for (HalfedgeRef he = halfedges_begin(); he != halfedges_end(); ++he) {
+        std::cout << "ID:" << he->id() << " Vertex:" << toString(he->vertex()->pos)
+                  << " Next:" << he->next()->id() << " Twin:" << he->twin()->id() << " Face:"
+                  << he->face()->id() << std::endl;
+    }
+    std::cout << "Edges" << std::endl;
+    for (EdgeRef er = edges_begin(); er != edges_end(); ++er) {
+        std::cout << "ID:" << er->id() << " Halfedge:"<<er->halfedge()->id() <<std::endl;
+    }
+    std::cout << "Faces" << std::endl;
+    for (FaceRef fr = faces_begin(); fr != faces_end(); ++fr){
+        std::cout << "ID:" << fr->id() << " Halfedge:" << fr->halfedge()->id()<< std::endl;
+    }
+    return true;
 }
 
 /* Note on the quad subdivision process:

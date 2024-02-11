@@ -667,6 +667,9 @@ std::string Model::UIsidebar(Undo& undo, Widgets& widgets, Scene_Maybe obj_opt, 
         return update_mesh_global(undo, obj, std::move(before),
                                   [](Halfedge_Mesh& m) { return m.simplify(); });
     }
+    if(ImGui::Button("Print")) { 
+        mesh.print();
+    }
 
     {
         auto sel = selected_element();
