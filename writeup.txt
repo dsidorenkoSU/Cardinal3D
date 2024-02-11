@@ -3,23 +3,23 @@ Names:
 - Ting Chia (Jerry) Chang, SunetID: tcchang3
 
 Work: 
-- FaceBevel by Jerry 
-- EdgeCollapse by Dmitrii
-- EdgeFlip by Dmitrii
-- EdgeSplit by Jerry
-- Triangulation by Dmitrii
-- LinearSubdivision by Jerry 
-- CatmullClarkSubdivision by Dmitrii
-- Simplification by Jerry
-- Model by Dmitrii
+- FaceBevel by Jerry (included in initial submission before deadline) 
+- EdgeCollapse by Dmitrii  (included in initial submission before deadline) 
+- EdgeFlip by Dmitrii  (included in initial submission before deadline) 
+- EdgeSplit by Jerry  (included in initial submission before deadline) 
+- Triangulation by Dmitriy (updated in resubmission) 
+- LinearSubdivision by Jerry  (included in initial submission before deadline) 
+- CatmullClarkSubdivision by Dmitrii  (included in initial submission before deadline) 
+- Simplification by Jerry (updated in resubmission) 
+- Model by Dmitrii (updated in resubmission) 
 
 Description: 
-- FaceBevel: working. 
+- FaceBevel: working 
 - EdgeCollapse: Implemented and tested on sphere and cube and cow. It works fine on the initial meshes but sometimes doesn't work on second or third collapse. 
 - EdgeFlip: working.
-- EdgeSplit: if non-triangle faces next to edge or it's boundary, no operation 
-- Triangulation: Implemented all the functionality. Tested on cube and dodecahedron 
+- EdgeSplit: working, if non-triangle faces next to edge or it's boundary, no operation 
+- Triangulation: working, implemented all the functionality. Tested on cube and dodecahedron 
 - LinearSubdivision: working. 
-- CatmullClarkSubdivision: Implemented and tested on cube and dodecahedron models
-- Simplification: add collapse_edge_j() to collapse edge in simplify(). Most of the time, it's working. No simplification is performed if non-triangle mesh or edge count < 100. collapse_edge_j() is similar to collapse_edge() but without implementation of edge case.  - Model: 
-- Model: Our family pet, dachshund Fox
+- CatmullClarkSubdivision: working, implemented and tested on cube and dodecahedron models
+- Simplification: add collapse_edge_j() to collapse edge in simplify(). Most of the time, it's working. No simplification is performed if non-triangle mesh or edge count < 100. collapse_edge_j() is similar to collapse_edge() but without implementation of edge case. 
+- Model: Dmitrii's family pet, dachshund Fox
