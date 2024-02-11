@@ -224,7 +224,7 @@ public:
         Collapse an edge, returning a pointer to the collapsed vertex
     */
     std::optional<VertexRef> collapse_edge(EdgeRef e);
-
+    std::optional<VertexRef> collapse_edge_j(EdgeRef e);
     /*
         Collapse a face, returning a pointer to the collapsed vertex
     */
@@ -283,7 +283,7 @@ public:
         ** Also deletes the erased elements **
     */
     std::optional<VertexRef> collapse_edge_erase(EdgeRef e) {
-        auto r = collapse_edge(e);
+        auto r = collapse_edge_j(e);
         do_erase();
         return r;
     }

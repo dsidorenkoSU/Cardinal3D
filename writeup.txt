@@ -14,12 +14,11 @@ Work:
 - Model by Dmitrii
 
 Description: 
-- FaceBevel: N/A
+- FaceBevel: working. 
 - EdgeCollapse: Implemented and tested on sphere and cube and cow. It works fine on the initial meshes but sometimes doesn't work on second or third collapse. 
-- EdgeFlip: 
+- EdgeFlip: working.
 - EdgeSplit: if non-triangle faces next to edge or it's boundary, no operation 
 - Triangulation: Implemented all the functionality but it leaves some extra next links between halfedges. Will be fixed in after initial deadline 
-- LinearSubdivision: N/A 
+- LinearSubdivision: working. 
 - CatmullClarkSubdivision: Implemented and tested on cube and dodecahedron models
-- Simplification: implement all the functionality, but couldn't get it to work. 
-- Model: 
+- Simplification: add collapse_edge_j() to collapse edge in simplify(). Most of the time, it's working. No simplification is performed if non-triangle mesh or edge count < 100. collapse_edge_j() is similar to collapse_edge() but without implementation of edge case.  - Model: 
