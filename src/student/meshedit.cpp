@@ -854,7 +854,7 @@ void Halfedge_Mesh::triangulate() {
         Vec3 fn = f->normal();
         // Collect vertices 
         VertexRef v0 = f->halfedge()->vertex();
-        VertexRef vn = h[h.size() - 1]->vertex();
+        // VertexRef vn = h[h.size() - 1]->vertex();
         
         // Triangulate convex polygon
         // for each halfedge (except first and last) 

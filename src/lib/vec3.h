@@ -233,6 +233,6 @@ inline bool operator<(Vec3 l, Vec3 r) {
 
 inline std::string toString(const Vec3& v) {
     char buff[256];
-    sprintf_s(buff, "[%f, %f, %f]", v.x, v.y, v.z);
+    // tf_s(buff, "[%f, %f, %f]", v.x, v.y, v.z);
     return std::string(buff);
 }

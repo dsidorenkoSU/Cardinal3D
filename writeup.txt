@@ -3,23 +3,34 @@ Names:
 - Ting Chia (Jerry) Chang, SunetID: tcchang3
 
 Work: 
-- FaceBevel by Jerry (included in initial submission before deadline) 
-- EdgeCollapse by Dmitrii  (included in initial submission before deadline) 
-- EdgeFlip by Dmitrii  (included in initial submission before deadline) 
-- EdgeSplit by Jerry  (included in initial submission before deadline) 
-- Triangulation by Dmitriy (updated in resubmission) 
-- LinearSubdivision by Jerry  (included in initial submission before deadline) 
-- CatmullClarkSubdivision by Dmitrii  (included in initial submission before deadline) 
-- Simplification by Jerry (updated in resubmission) 
-- Model by Dmitrii (updated in resubmission) 
+- FaceBevel by Jerry
+- EdgeCollapse by Dmitrii 
+- EdgeFlip by Dmitrii  
+- EdgeSplit by Jerry
+- Triangulation by Dmitriy
+- LinearSubdivision by Jerry  
+- CatmullClarkSubdivision by Dmitrii  
+- Simplification by Jerry 
+- Model by Dmitrii
 
 Description: 
-- FaceBevel: working 
-- EdgeCollapse: Implemented and tested on sphere and cube and cow. It works fine on the initial meshes but sometimes doesn't work on second or third collapse. 
-- EdgeFlip: working.
+- FaceBevel: normal movement is normal to the face, tangent movement follows the direction of middle of two edges vectors 
+
+  a ---- b     for example, middle of b->a, c->a vector is how edge connected to point a moves along tangent 
+   \    /
+    \  /
+     c
+
+- EdgeCollapse: Implemented and tested on sphere and cube and cow. It works fine on the initial meshes but sometimes doesn't work on second or third collapse 
+- EdgeFlip: working
 - EdgeSplit: working, if non-triangle faces next to edge or it's boundary, no operation 
-- Triangulation: working, implemented all the functionality. Tested on cube and dodecahedron 
-- LinearSubdivision: working. 
+- Triangulation: working, implemented all the functionalities, tested on cube and dodecahedron 
+- LinearSubdivision: working, test on sphere, teapot.dae
 - CatmullClarkSubdivision: working, implemented and tested on cube and dodecahedron models
-- Simplification: add collapse_edge_j() to collapse edge in simplify(). Most of the time, it's working. No simplification is performed if non-triangle mesh or edge count < 100. collapse_edge_j() is similar to collapse_edge() but without implementation of edge case. 
-- Model: Dmitrii's family pet, dachshund Fox
+- Simplification: Most of the time, simplification is working. No simplification is performed if non-triangle mesh or edge count < 100. Add collapse_edge_j() to collapse edge to be used in simplify() as we are going to pass in optimal point, but end up using mid point in the submission. collapse_edge_j() is similar to collapse_edge() but without implementation of edge case. 
+- Model: Dmitrii's family pet, dachshund Fox;I used both Cardinal3D and ZBrush to create this model. This is how it was generated step by step: 
+1) I used ZBrush ZSphere brush to create a spherical skeleton for quadruped animal. I gave it all body proportions of Fox (long body, tail, legs) but no small details like eyes or ears. 
+2) Then I generated a high resolution Dynamesh by skeleton and exported it to OBJ and then to Collada (.dae).
+3) Imported .dae to Cardinal3D. The mesh was too highres for efficient editing. So I used simplify to reduce the resolution. 
+4) Add small details: extruded chin, ears and added spherical eyes. 
+5) Applied CatmullClark subdivision to get rid of small long triangles on long body.   
