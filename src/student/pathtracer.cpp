@@ -22,7 +22,7 @@ Spectrum Pathtracer::trace_pixel(size_t x, size_t y) {
     Vec2 xy((float)x, (float)y);
     Vec2 wh((float)out_w, (float)out_h); 
 
-    //std::cout << x << " " << y << std::endl; 
+    // std::cout << x << " " << y << std::endl; 
     // std::cout << out_w << " " << out_h << std::endl << std::endl; 
 
     // TODO (PathTracer): Task 1

@@ -152,7 +152,7 @@ struct Mat4 {
 
     /// Expands v to Vec4(v, 1.0), multiplies, and projects back to 3D
     Vec3 operator*(Vec3 v) const {
-        return operator*(Vec4(v, 1.0f)).project();
+        return (operator*(Vec4(v, 1.0f))).project();
     }
     /// Expands v to Vec4(v, 0.0), multiplies, and projects back to 3D
     Vec3 rotate(Vec3 v) const {
