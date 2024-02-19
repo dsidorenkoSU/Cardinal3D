@@ -33,7 +33,7 @@ namespace Rect {
 struct Uniform {
     Uniform(Vec2 size = Vec2(1.0f)) : size(size) {
     }
-
+    
     Vec2 sample(float& pdf) const;
     Vec2 size;
 };

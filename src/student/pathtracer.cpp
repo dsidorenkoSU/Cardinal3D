@@ -3,36 +3,63 @@
 #include "../rays/samplers.h"
 #include "../util/rand.h"
 #include "debug.h"
+#include <iostream>
 
 namespace PT {
 
 // Return the radiance along a ray entering the camera and landing on a
 // point within pixel (x,y) of the output image.
 //
+
+// Pathtracer::trace_pixel must support super-sampling. The starter code provided to you 
+// will call Pathtracer::trace_pixel once for each sample (Pathtracer::n_samples) and 
+// resolve the results to compute final pixel values. 
+// Your implementation of Pathtracer::trace_pixel must choose a new location within the pixel for each sample. 
+// This is equivalent to saying that the ray tracer wil shoot n_samples camera rays per pixel.
+
 Spectrum Pathtracer::trace_pixel(size_t x, size_t y) {
 
     Vec2 xy((float)x, (float)y);
-    Vec2 wh((float)out_w, (float)out_h);
+    Vec2 wh((float)out_w, (float)out_h); 
+
+    //std::cout << x << " " << y << std::endl; 
+    // std::cout << out_w << " " << out_h << std::endl << std::endl; 
 
     // TODO (PathTracer): Task 1
 
     // Generate a sample within the pixel with coordinates xy and return the
     // incoming light using trace_ray.
 
+    // nomalize to (0, 1)
     // If n_samples is 1, please send the ray through the center of the pixel.
     // If n_samples > 1, please send the ray through any random point within the pixel
+    Vec2 pixel_norm; 
+    float pdf; 
 
-    // Tip: consider making a call to Samplers::Rect::Uniform
+    if (n_samples == 1) {
+        pixel_norm = (xy.operator+(0.5)).operator/(wh); // center of pixel if 1 
+        //td::cout << pixel_norm << std::endl << std::endl; 
+    }
+    else {
+        // Tip: consider making a call to Samplers::Rect::Uniform
+        Samplers::Rect::Uniform temp; 
+        // potentially temp.sample(pdf) can have same point for multiple samples and even get 1 
+        Vec2 sample_pt = temp.sample(pdf); 
+        pixel_norm = (xy.operator+(sample_pt)).operator/(wh); 
+        //std::cout << sample_pt << std::endl;
+        //std::cout << pixel_norm << std::endl << std::endl; 
+
+    }
+    // As an example, the code below generates a ray through the bottom left of the
+    // specified pixel
+    Ray out = camera.generate_ray(pixel_norm);
 
     // Tip: you may want to use log_ray for debugging. Given ray t, the following lines
     // of code will log .03% of all rays (see util/rand.h) for visualization in the app.
     // see student/debug.h for more detail.
-    //if (RNG::coin_flip(0.0003f))
-    //    log_ray(out, 10.0f);
+    // if (RNG::coin_flip(0.03f))
+    // log_ray(out, 10.0f);
 
-    // As an example, the code below generates a ray through the bottom left of the
-    // specified pixel
-    Ray out = camera.generate_ray(xy / wh);
     return trace_ray(out);
 }
 
