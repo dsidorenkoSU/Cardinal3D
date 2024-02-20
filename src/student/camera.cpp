@@ -3,6 +3,8 @@
 #include "../rays/samplers.h"
 #include "debug.h"
 #include <iostream>
+#define _USE_MATH_DEFINES
+#include "math.h"
 
 Ray Camera::generate_ray(Vec2 screen_coord) const {
 

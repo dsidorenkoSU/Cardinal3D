@@ -1,6 +1,11 @@
 
 #pragma once
 
+#include "../geometry/util.h"
+#include "../lib/mat4.h"
+#include "../lib/bbox.h"
+#include "../lib/ray.h"
+
 /* Debugging Tips:
 
     You may use this file, as well as debug.cpp, to add any debugging features and
@@ -45,6 +50,11 @@
 struct Debug_Data {
     // Setting it here makes it default to false.
     bool normal_colors = false;
+    Ray ray;
+    BBox box;
+    void render_debug(const Mat4& view);
+    int debug_draw;
+    Vec2 rayBoxHit;
 };
 
 // This tells other code about a global variable of type Debug_Data, allowing

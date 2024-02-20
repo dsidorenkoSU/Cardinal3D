@@ -670,6 +670,7 @@ std::string Model::UIsidebar(Undo& undo, Widgets& widgets, Scene_Maybe obj_opt, 
     if(ImGui::Button("Print")) { 
         mesh.print();
     }
+  
 
     {
         auto sel = selected_element();

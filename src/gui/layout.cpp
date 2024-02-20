@@ -6,6 +6,7 @@
 
 #include "../scene/renderer.h"
 #include "../scene/undo.h"
+#include "../student/debug.h"
 
 namespace Gui {
 
@@ -14,6 +15,9 @@ bool Layout::keydown(Widgets& widgets, SDL_Keysym key) {
 }
 
 void Layout::render(Scene_Maybe obj_opt, Widgets& widgets, Camera& cam) {
+
+    Mat4 view = cam.get_view();
+    debug_data.render_debug(view);
 
     if(!obj_opt.has_value()) return;
     Scene_Item& item = obj_opt.value();
@@ -25,8 +29,7 @@ void Layout::render(Scene_Maybe obj_opt, Widgets& widgets, Camera& cam) {
 
     Pose& pose = item.pose();
     float scale = std::min((cam.pos() - pose.pos).norm() / 5.5f, 10.0f);
-    Mat4 view = cam.get_view();
-
+    
     item.render(view);
     Renderer::get().outline(view, item);
     widgets.render(view, pose.pos, scale);

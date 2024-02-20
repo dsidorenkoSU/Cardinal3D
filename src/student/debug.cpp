@@ -1,9 +1,12 @@
 
 #include "debug.h"
 #include <imgui/imgui.h>
+#include "../geometry/util.h"
 
 #include "../lib/log.h"
 #include "../lib/spectrum.h"
+
+#include "../scene/renderer.h"
 
 // Actual storage for the debug data
 Debug_Data debug_data;
@@ -42,21 +45,54 @@ void student_debug_ui() {
     // Debug option example
     Checkbox("Pathtracer: use normal colors", &debug_data.normal_colors);
 
-    // ImGui examples
-    if(Button("Press Me")) {
-        info("Debug button pressed!");
-    }
+    
 
     // We need to store values somewhere, or else they will get reset every time
     // we run this function (which is every frame). For convenience, we make them
     // static, which gives them the same storage class as global variables.
 
-    static int int_value = 0;
-    InputInt("Int Input", &int_value);
-
-    static float float_value = 0.0f;
-    InputFloat("Float Input", &float_value);
-
+    static int debug_draw = 0;
+    InputInt("Debug draw", &debug_draw);
+    debug_data.debug_draw = debug_draw;
+    
+    
     static Spectrum color = Spectrum(1.0f);
     ColorEdit3("Color Input", color.data);
+    
+    static float ROx = -2.0f;
+    InputFloat("ROx", &ROx);
+    static float ROy = -2.0f;
+    InputFloat("ROy", &ROy);
+    static float ROz = -3.0f;
+    InputFloat("ROz", &ROz);
+
+    // ImGui examples
+    if(Button("BoxRayTests")) {
+        debug_data.debug_draw = 1;
+        debug_data.box = BBox(Vec3(-1.0f, -1.0f, -1.0f), Vec3(1.0f, 1.0f, 1.0f));
+        float sqrt14 = sqrtf(17.0f);
+        Ray r = Ray(Vec3(ROx, ROy, ROz), Vec3(2.0f / sqrt14, 2.0f / sqrt14, 3.0f / sqrt14));
+        Vec2 t;
+        debug_data.box.hit(r, t);
+        debug_data.ray = r;
+        debug_data.rayBoxHit = t;
+    }
+}
+
+void Debug_Data::render_debug(const Mat4& view)
+{
+    if (debug_draw == 0) 
+        return;
+    GL::Lines lines;
+    
+    lines.add(box.min, Vec3(box.max.x, box.min.y, box.min.z), Vec3(1.0f, 1.0f, 1.0f));
+    lines.add(box.min, Vec3(box.min.x, box.max.y, box.min.z), Vec3(1.0f, 1.0f, 1.0f));
+    lines.add(box.min, Vec3(box.min.x, box.min.y, box.max.z), Vec3(1.0f, 1.0f, 1.0f));
+
+    
+    if(rayBoxHit.x > 0.0f && rayBoxHit.x < FLT_MAX) {
+        lines.add(ray.point, ray.at(rayBoxHit.x), Vec3(1.0f, 0.0f, 0.0f));
+    }
+
+    Renderer::get().lines(lines, view);
 }

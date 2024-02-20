@@ -5,6 +5,7 @@
 
 #include "../platform/platform.h"
 #include "../scene/renderer.h"
+#include "../student/debug.h"
 
 #include "manager.h"
 #include "render.h"
@@ -41,7 +42,11 @@ void Render::render(Scene_Maybe obj_opt, Widgets& widgets, Camera& user_cam) {
             renderer.lines(bvh_active, view);
             GL::enable(GL::Opt::depth_write);
         }
+
+        
     }
+
+    debug_data.render_debug(view);
 
     if(obj_opt.has_value()) {
 
