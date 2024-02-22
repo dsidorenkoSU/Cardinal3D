@@ -70,8 +70,8 @@ void student_debug_ui() {
     if(Button("BoxRayTests")) {
         debug_data.debug_draw = 1;
         debug_data.box = BBox(Vec3(-1.0f, -1.0f, -1.0f), Vec3(1.0f, 1.0f, 1.0f));
-        float sqrt14 = sqrtf(17.0f);
-        Ray r = Ray(Vec3(ROx, ROy, ROz), Vec3(2.0f / sqrt14, 2.0f / sqrt14, 3.0f / sqrt14));
+        float sqrt14 = sqrtf(ROx*ROx + ROy*ROy + ROz* ROz);
+        Ray r = Ray(Vec3(ROx, ROy, ROz), Vec3(-ROx / sqrt14, -ROy / sqrt14, -ROz / sqrt14));
         Vec2 t;
         debug_data.box.hit(r, t);
         debug_data.ray = r;
@@ -88,10 +88,15 @@ void Debug_Data::render_debug(const Mat4& view)
     lines.add(box.min, Vec3(box.max.x, box.min.y, box.min.z), Vec3(1.0f, 1.0f, 1.0f));
     lines.add(box.min, Vec3(box.min.x, box.max.y, box.min.z), Vec3(1.0f, 1.0f, 1.0f));
     lines.add(box.min, Vec3(box.min.x, box.min.y, box.max.z), Vec3(1.0f, 1.0f, 1.0f));
+    lines.add(box.max, Vec3(box.min.x, box.max.y, box.max.z), Vec3(1.0f, 1.0f, 1.0f));
+    lines.add(box.max, Vec3(box.max.x, box.min.y, box.max.z), Vec3(1.0f, 1.0f, 1.0f));
+    lines.add(box.max, Vec3(box.max.x, box.max.y, box.min.z), Vec3(1.0f, 1.0f, 1.0f));
 
-    
     if(rayBoxHit.x > 0.0f && rayBoxHit.x < FLT_MAX) {
-        lines.add(ray.point, ray.at(rayBoxHit.x), Vec3(1.0f, 0.0f, 0.0f));
+        Vec3 p0 = ray.at(rayBoxHit.x);
+        Vec3 p1 = ray.at(rayBoxHit.y);
+        lines.add(ray.point, p0, Vec3(0.0f, 1.0f, 0.0f));
+        lines.add(p0, p1, Vec3(1.0f, 0.0f, 0.0f));
     }
 
     Renderer::get().lines(lines, view);
