@@ -66,12 +66,18 @@ void student_debug_ui() {
     static float ROz = -3.0f;
     InputFloat("ROz", &ROz);
 
+    static float Dx = 0.0f;
+    InputFloat("Dx", &Dx);
+    static float Dy = 0.0f;
+    InputFloat("Dy", &Dy);
+    static float Dz = -1.0f;
+    InputFloat("Dz", &Dz);
+
     // ImGui examples
     if(Button("BoxRayTests")) {
         debug_data.debug_draw = 1;
         debug_data.box = BBox(Vec3(-1.0f, -1.0f, -1.0f), Vec3(1.0f, 1.0f, 1.0f));
-        float sqrt14 = sqrtf(ROx*ROx + ROy*ROy + ROz* ROz);
-        Ray r = Ray(Vec3(ROx, ROy, ROz), Vec3(-ROx / sqrt14, -ROy / sqrt14, -ROz / sqrt14));
+        Ray r = Ray(Vec3(ROx, ROy, ROz), Vec3(Dx, Dy, Dz).unit());
         Vec2 t;
         debug_data.box.hit(r, t);
         debug_data.ray = r;
