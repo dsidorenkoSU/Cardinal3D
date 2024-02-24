@@ -8,11 +8,21 @@ BBox Triangle::bbox() const {
 
     // TODO (PathTracer): Task 2
     // compute the bounding box of the triangle
+    Tri_Mesh_Vert v_0 = vertex_list[v0];
+    Tri_Mesh_Vert v_1 = vertex_list[v1];
+    Tri_Mesh_Vert v_2 = vertex_list[v2];
+
+    Vec3 min_bb = hmin(v_0.position, hmin(v_1.position, v_2.position));
+    Vec3 max_bb = hmax(v_0.position, hmax(v_1.position, v_2.position));
+
+    BBox box(min_bb, max_bb);
 
     // Beware of flat/zero-volume boxes! You may need to
     // account for that here, or later on in BBox::intersect
 
-    BBox box;
+
+    // not taking care of flat/zero volume...not sure what need to be done. 
+
     return box;
 }
 

@@ -26,9 +26,9 @@ public:
 private:
     Triangle(Tri_Mesh_Vert* verts, unsigned int v0, unsigned int v1, unsigned int v2);
 
-    unsigned int v0, v1, v2;
-    Tri_Mesh_Vert* vertex_list;
-    friend class Tri_Mesh;
+    unsigned int v0, v1, v2; // 0, 1, 2? 
+    Tri_Mesh_Vert* vertex_list; 
+    friend class Tri_Mesh; // A friend class can access private and protected members of other classes 
 };
 
 class Tri_Mesh {
