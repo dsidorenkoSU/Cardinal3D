@@ -103,6 +103,10 @@ void Debug_Data::render_debug(const Mat4& view)
         Vec3 p1 = ray.at(rayBoxHit.y);
         lines.add(ray.point, p0, Vec3(0.0f, 1.0f, 0.0f));
         lines.add(p0, p1, Vec3(1.0f, 0.0f, 0.0f));
+    }else {
+        Vec3 p_1 = ray.at(-0.1f);
+        lines.add(p_1, ray.point, Vec3(1.0f, 0.0f, 0.0f));
+        lines.add(ray.point,ray.at(1.0f) , Vec3(0.0f, 0.0f, 1.0f));
     }
 
     Renderer::get().lines(lines, view);
