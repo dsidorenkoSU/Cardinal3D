@@ -41,7 +41,7 @@ Trace Triangle::hit(const Ray& ray) const {
     // Intersect this ray with a triangle defined by the above three points.
     // Intersection should yield a ray t-value, and a hit point (u,v) on the surface of the triangle
     Vec3 e1 = v_1.position.operator-(v_0.position);
-    Vec3 e2 = v_1.position.operator-(v_0.position);
+    Vec3 e2 = v_2.position.operator-(v_0.position);
     Vec3 s  = ray.point.operator-(v_0.position);
     Vec3 e1_x_d = cross(e1, ray.dir); 
 
@@ -59,9 +59,9 @@ Trace Triangle::hit(const Ray& ray) const {
         Vec3  s_x_e2 = cross(s, e2); 
         float u_cal  = -1/dot(e1_x_d, e2)*dot(s_x_e2, ray.dir);
         float v_cal  =  1/dot(e1_x_d, e2)*dot(e1_x_d, s); 
-        float t_cal = -1/dot(e1_x_d, e2)*dot(s_x_e2, e1);
+        float t_cal  = -1/dot(e1_x_d, e2)*dot(s_x_e2, e1);
         // if u, v < 0 and u + v > 1 then not in the triangle or t > bound, t < 0 
-        if (u_cal < 0.0f || u_cal < 0.0f || u_cal+v_cal > 1.0f || t_cal > ray.dist_bounds.y || t_cal <= 0.0f) {
+        if (u_cal < 0.0f || v_cal < 0.0f || u_cal+v_cal > 1.0f || t_cal > ray.dist_bounds.y || t_cal <= 0.0f) {
             ret.origin = ray.point;
             ret.hit = false;       // was there an intersection?
             ret.distance = 0.0f;   // at what distance did the intersection occur?
@@ -74,6 +74,8 @@ Trace Triangle::hit(const Ray& ray) const {
             ret.hit = true;          // was there an intersection?
             ret.distance = t_cal;    // at what distance did the intersection occur?
             // std::cout << t_cal << std::endl; 
+            // std::cout << u_cal << std::endl; 
+            // std::cout << v_cal << std::endl << std::endl;
             ret.position = ray.point.operator+(ray.dir.operator*(t_cal)); // where was the intersection? 
             ret.normal = v_0.normal.operator*(1-u_cal-v_cal) + v_1.normal.operator*(u_cal) + v_2.normal.operator*(v_cal);   // what was the surface normal at the intersection? 
                                                                                                                             // (this should be interpolated between the three vertex normals)  
