@@ -49,7 +49,7 @@ Vec3 refract(Vec3 out_dir, float index_of_refraction, bool& was_internal) {
 
 
     // return refract.unit();
-    return vec3()
+    return Vec3();
 }
 
 BSDF_Sample BSDF_Lambertian::sample(Vec3 out_dir) const {
@@ -132,8 +132,6 @@ BSDF_Sample BSDF_Refract::sample(Vec3 out_dir) const {
     // Implement pure refraction BSDF.
 
     // Be wary of your eta1/eta2 ratio - are you entering or leaving the surface?
-    index_of_refraction; 
-
     BSDF_Sample ret;
 
     ret.attenuation = transmittance; // What is the ratio of reflected/incoming light?
