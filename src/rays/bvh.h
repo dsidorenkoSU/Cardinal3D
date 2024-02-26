@@ -37,6 +37,8 @@ private:
         bool is_leaf() const;
         friend class BVH<Primitive>;
     };
+
+    void subdivide(size_t root_node_addr, Node& node, size_t max_leaf_size);
     size_t new_node(BBox box = {}, size_t start = 0, size_t size = 0, size_t l = 0, size_t r = 0);
 
     std::vector<Node> nodes;
