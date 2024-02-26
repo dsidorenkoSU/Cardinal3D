@@ -8,25 +8,48 @@ namespace PT {
 Vec3 reflect(Vec3 dir) {
 
     // TODO (PathTracer): Task 6
-    // Return reflection of dir about the surface normal (0,1,0).
-    return Vec3();
+    // Return reflection of dir about the surface normal (0,1,0). 
+    Vec3 reflect;
+    Vec3 surf_n(0.0f, 1.0f, 0.0f);
+    reflect = (surf_n.operator*(2*dot(dir.unit(), surf_n))).operator-(dir.unit()); 
+
+    return reflect.unit();
 }
 
 Vec3 refract(Vec3 out_dir, float index_of_refraction, bool& was_internal) {
 
     // TODO (PathTracer): Task 6
     // Use Snell's Law to refract out_dir through the surface
-    // Return the refracted direction. Set was_internal to false if
-    // refraction does not occur due to total internal reflection,
-    // and true otherwise.
+    // // Return the refracted direction. Set was_internal to false if
+    // // refraction does not occur due to total internal reflection,
+    // // and true otherwise.????? conflict 
+    // Vec3 refract;
+    // Vec3 surf_n(0.0f, 1.0f, 0.0f);
+    // was_internal = false; 
 
-    // When dot(out_dir,normal=(0,1,0)) is positive, then out_dir corresponds to a
-    // ray exiting the surface into vaccum (ior = 1). However, note that
-    // you should actually treat this case as _entering_ the surface, because
-    // you want to compute the 'input' direction that would cause this output,
-    // and to do so you can simply find the direction that out_dir would refract
-    // _to_, as refraction is symmetric.
-    return Vec3();
+    // float cos_theta = dot(out_dir.unit(), surf_n); 
+    // if (cos_theta > 0) { // incoming ray dir is entering surface,
+
+    // }
+    // else { // assume the incoming ray direction is leaving the surface and entering vacuum.  cant have total internal reflection 
+    //     float sin_theta_in = index_of_refraction*sin(acos(-cos_theta));
+
+    //     refract = surf_n.operator*(cos(asin(sin_theta_in)))+;
+    // }
+    // // When dot(out_dir,normal=(0,1,0)) is positive, then out_dir corresponds to a
+    // // ray exiting the surface into vaccum (ior = 1). However, note that
+    // // you should actually treat this case as _entering_ the surface, because
+    // // you want to compute the 'input' direction that would cause this output,
+    // // and to do so you can simply find the direction that out_dir would refract
+    // // _to_, as refraction is symmetric.
+
+
+    // // returns the ray that results from refracting the ray in out_dir about the surface according to Snell’s Law.
+    // // The surface’s index of refraction is given by the argument index_of_refraction. 
+
+
+    // return refract.unit();
+    return vec3()
 }
 
 BSDF_Sample BSDF_Lambertian::sample(Vec3 out_dir) const {
@@ -51,9 +74,9 @@ BSDF_Sample BSDF_Mirror::sample(Vec3 out_dir) const {
     // Implement mirror BSDF
 
     BSDF_Sample ret;
-    ret.attenuation = Spectrum(); // What is the ratio of reflected/incoming light?
-    ret.direction = Vec3();       // What direction should we sample incoming light from?
-    ret.pdf = 0.0f; // Was was the PDF of the sampled direction? (In this case, the PMF)
+    ret.attenuation = reflectance; // What is the ratio of reflected/incoming light? 
+    ret.direction = reflect(out_dir);           // What direction should we sample incoming light from?
+    ret.pdf = 1.0f; // Was was the PDF of the sampled direction? (In this case, the PMF)
     return ret;
 }
 
@@ -109,11 +132,13 @@ BSDF_Sample BSDF_Refract::sample(Vec3 out_dir) const {
     // Implement pure refraction BSDF.
 
     // Be wary of your eta1/eta2 ratio - are you entering or leaving the surface?
+    index_of_refraction; 
 
     BSDF_Sample ret;
-    ret.attenuation = Spectrum(); // What is the ratio of reflected/incoming light?
+
+    ret.attenuation = transmittance; // What is the ratio of reflected/incoming light?
     ret.direction = Vec3();       // What direction should we sample incoming light from?
-    ret.pdf = 0.0f; // Was was the PDF of the sampled direction? (In this case, the PMF)
+    ret.pdf = 1.0f; // Was was the PDF of the sampled direction? (In this case, the PMF)
     return ret;
 }
 
