@@ -50,6 +50,11 @@ void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_lea
             float Na = 0.0f;
             float Nb = 0.0f;
             for(int i = 0; i < BUCKETS_COUNT; ++i) {
+                
+                // skip empty buckets
+                if(buckets[i] == 0) 
+                    continue;
+
                 if(i < p) {
                     Na += buckets[i];
                     bl.enclose(bboxes[i]);
@@ -97,7 +102,17 @@ void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_lea
     // Sort all primitives in place
     // So that primitives in the left bucket come first in the primitives list
     int iprim;
-    for(iprim = node.start; iprim < node.start + node.size; ++iprim) {
+    auto ns = primitives.begin() + node.start;
+    auto ne = ns + node.size;
+    auto middle =
+        std::partition(ns,ne, [dimMin, dC, cmin, pdimMin](const auto& em) {
+                    const BBox& bboxj = em.bbox();
+                    Vec3 cj = 0.5f * (bboxj.min + bboxj.max);
+                    int bjNo = (int)((cj[dimMin] - cmin) / dC);
+                    return bjNo < pdimMin;
+        });
+    
+   /* for(iprim = node.start; iprim < node.start + node.size; ++iprim) {
         BBox& bbox = primitives[iprim].bbox();
         Vec3 c = 0.5f * (bbox.min + bbox.max);
         int bNo = (int)((c[dimMin] - cmin) / dC);
@@ -121,31 +136,28 @@ void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_lea
         }
         bboxes[bNo].enclose(bbox);
         buckets[bNo]++;
-    }
+    }*/
 
     // Create bounding boxes for children
     BBox split_leftBox;
     BBox split_rightBox;
-
-    for(int i = node.start; i < node.start+node.size; ++i) {
-        if(i < iprim) {
-            // Na += buckets[i];
-            split_leftBox.enclose(primitives[i].bbox());
-        } else {
-            // Nb += buckets[i];
-            split_rightBox.enclose(primitives[i].bbox());
-        }
+    std::vector<Primitive>::iterator it = primitives.begin() + node.start;
+    for(; it != middle; ++it) {
+       split_leftBox.enclose(it->bbox()); 
+    }
+    for(; it != primitives.begin() + node.start + node.size; it++) {
+       split_rightBox.enclose(it->bbox());
     }
 
     // Note that by construction in this simple example, the primitives are
     // contiguous as required. But in the students real code, students are
     // responsible for reorganizing the primitives in the primitives array so that
     // after a SAH split is computed, the chidren refer to contiguous ranges of primitives.
-
+    int sizel = std::distance(primitives.begin() + node.start, middle);
     size_t startl = node.start;
-    size_t rangel = iprim;              // number of prims in left child
-    size_t startr = node.start + iprim; // starting prim index of right child
-    size_t ranger = node.size - iprim;  // number of prims in right child
+    size_t rangel = sizel ;              // number of prims in left child
+    size_t startr = node.start + sizel; // starting prim index of right child
+    size_t ranger = node.size - sizel;  // number of prims in right child
 
     // create child nodes
     size_t node_addr_l = new_node();
