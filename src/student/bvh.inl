@@ -112,32 +112,6 @@ void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_lea
                     return bjNo < pdimMin;
         });
     
-   /* for(iprim = node.start; iprim < node.start + node.size; ++iprim) {
-        BBox& bbox = primitives[iprim].bbox();
-        Vec3 c = 0.5f * (bbox.min + bbox.max);
-        int bNo = (int)((c[dimMin] - cmin) / dC);
-        if(bNo >= pdimMin) {
-            int low = -1;
-            for(int j = iprim + 1; j < node.start + node.size; ++j) {
-                BBox& bboxj = primitives[j].bbox();
-                Vec3 cj = 0.5f * (bboxj.min + bboxj.max);
-                int bjNo = (int)((cj[dimMin] - cmin) / dC);
-                if(bjNo < pdimMin) {
-                    low = bjNo;
-                    break;
-                }
-            }
-            if(low != -1) {
-                std::swap(primitives[iprim], primitives[low]);
-
-            } else {
-                break;
-            }
-        }
-        bboxes[bNo].enclose(bbox);
-        buckets[bNo]++;
-    }*/
-
     // Create bounding boxes for children
     BBox split_leftBox;
     BBox split_rightBox;
