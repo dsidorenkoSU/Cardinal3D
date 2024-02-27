@@ -11,7 +11,7 @@ Vec3 reflect(Vec3 dir) {
     // Return reflection of dir about the surface normal (0,1,0). 
     Vec3 reflect;
     Vec3 surf_n(0.0f, 1.0f, 0.0f);
-    reflect = (surf_n.operator*(2*dot(dir.unit(), surf_n))).operator-(dir.unit()); 
+    reflect = (surf_n.operator*(2*dot(dir, surf_n))).operator-(dir); 
 
     return reflect.unit();
 }

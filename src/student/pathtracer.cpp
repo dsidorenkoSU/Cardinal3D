@@ -154,11 +154,21 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
         }
     }
 
+
     // TODO (PathTracer): Task 5
     // Compute an indirect lighting estimate using path tracing with Monte Carlo.
 
     // (1) Ray objects have a depth field; if it reaches max_depth, you should
     // terminate the path.
+    if (ray.depth == max_depth) return {};
+
+    if (bsdf.is_mirror()) {
+      BSDF_Sample bsdf_s = bsdf.sample(out_dir);
+      radiance_out = radiance_out * bsdf_s.attenuation;
+      Ray ray_r(hit.position, object_to_world.rotate(bsdf_s.direction)); 
+      ray_r.depth = ray.depth+1; 
+      return trace_ray(ray_r);
+    }
 
     // (2) Randomly select a new ray direction (it may be reflection or transmittance
     // ray depending on surface type) using bsdf.sample()
