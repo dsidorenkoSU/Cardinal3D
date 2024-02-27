@@ -44,7 +44,7 @@ void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_lea
             if(sind != cind) SN *= node.bbox.max[sind] - node.bbox.min[sind];
         }
 
-        int pMin = -1;
+        // int pMin = -1;
         for(int p = 1; p < BUCKETS_COUNT; ++p) {
             BBox bl, br;
             float Na = 0.0f;
@@ -80,7 +80,7 @@ void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_lea
             float SAE = ((SA * Na) / SN) + (SB * Nb) / SN;
             if(SAE < SAEMin) {
                 SAEMin = SAE;
-                pMin = p;
+                // pMin = p;
                 dimMin = cind;
                 pdimMin = p;
             }
@@ -249,10 +249,10 @@ void BVH<Primitive>::find_closest_hit(const Ray& ray,const Node& node, Trace& cl
         // Hit two boxes, so we should check the closest first
         size_t first = hit[0].x <= hit[1].x ? node.l : node.r;
         size_t second = first == node.l ? node.r : node.l;
-        size_t second_hit = second == node.l ? 0 : 1;
+        // size_t second_hit = second == node.l ? 0 : 1;
 
         find_closest_hit(ray, nodes[first], closest);
-        Trace c1 = closest;
+        // Trace c1 = closest;
         //if(hit[second_hit].x < closest.distance) 
             find_closest_hit(ray, nodes[second], closest);
     }
