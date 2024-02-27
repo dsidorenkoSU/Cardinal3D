@@ -5,7 +5,7 @@
 
 namespace PT {
 
-template<typename Primitive> 
+template<typename Primitive>
 void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_leaf_size) {
     // Terminate if max leaf size is reached reached
     if(node.size <= max_leaf_size) {
@@ -31,8 +31,8 @@ void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_lea
         float dC = (cmax - cmin) / BUCKETS_COUNT;
 
         // Assign primitives to buckets
-        for(int itPrim = node.start; itPrim < node.start + node.size; ++itPrim) {
-            BBox& bbox = primitives[itPrim].bbox();
+        for(auto itPrim = node.start; itPrim < (size_t)(node.start + node.size); ++itPrim) {
+            const BBox& bbox = primitives[itPrim].bbox();
             Vec3 c = 0.5f * (bbox.min + bbox.max);
             float bNo = (int)((c[cind] - cmin) / dC);
             bboxes[bNo].enclose(bbox);
@@ -50,9 +50,9 @@ void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_lea
             float Na = 0.0f;
             float Nb = 0.0f;
             for(int i = 0; i < BUCKETS_COUNT; ++i) {
-                
+
                 // skip empty buckets
-                if(buckets[i] == 0) 
+                if(buckets[i] == 0)
                     continue;
 
                 if(i < p) {
@@ -63,11 +63,11 @@ void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_lea
                     br.enclose(bboxes[i]);
                 }
             }
-            
+
             // Only emply buckets on the left of right side
-            if ((int)Na == 0 || (int)Nb == 0) 
+            if ((int)Na == 0 || (int)Nb == 0)
                 continue;
-            
+
             float SA = 1.0f;
             float SB = 1.0f;
             for(int sind = 0; sind < 3; ++sind) {
@@ -110,13 +110,13 @@ void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_lea
                     int bjNo = (int)((cj[dimMin] - cmin) / dC);
                     return bjNo < pdimMin;
         });
-    
+
     // Create bounding boxes for children
     BBox split_leftBox;
     BBox split_rightBox;
-    std::vector<Primitive>::iterator it = primitives.begin() + node.start;
+    PrimitivesCIterator it = primitives.begin() + node.start;
     for(; it != middle; ++it) {
-       split_leftBox.enclose(it->bbox()); 
+       split_leftBox.enclose(it->bbox());
     }
     for(; it != primitives.begin() + node.start + node.size; it++) {
        split_rightBox.enclose(it->bbox());
@@ -209,7 +209,7 @@ void BVH<Primitive>::build(std::vector<Primitive>&& prims, size_t max_leaf_size)
         bb.enclose(primitives[i].bbox());
     }
 
-    //primitives[i].center 
+    //primitives[i].center
 
     // set up root node (root BVH). Notice that it contains all primitives.
     size_t root_node_addr = new_node();
@@ -219,13 +219,13 @@ void BVH<Primitive>::build(std::vector<Primitive>&& prims, size_t max_leaf_size)
     node.size = primitives.size();
 
     subdivide(root_node_addr, node, max_leaf_size);
-    
+
 }
 
 template<typename Primitive>
 void BVH<Primitive>::find_closest_hit(const Ray& ray,const Node& node, Trace& closest) const {
     if(node.is_leaf()) {
-        for(std::vector<Primitive>::const_iterator itPrim = primitives.begin() + node.start;
+        for(PrimitivesCIterator itPrim = primitives.begin() + node.start;
             itPrim != primitives.begin() + node.start + node.size; itPrim++) {
             Trace hit = itPrim->hit(ray);
             closest = Trace::min(closest, hit);
@@ -237,12 +237,12 @@ void BVH<Primitive>::find_closest_hit(const Ray& ray,const Node& node, Trace& cl
         bool hl = cl.bbox.hit(ray, hit[0]);
         bool hr = cr.bbox.hit(ray, hit[1]);
         // Not hit any boxes
-        if(!hl && !hr) 
+        if(!hl && !hr)
             return;
-        
+
         // hit only one box
         if((hl && !hr) || (!hl && hr)) {
-            find_closest_hit(ray, hl ? cl : cr ,closest);        
+            find_closest_hit(ray, hl ? cl : cr ,closest);
             return;
         }
 
@@ -253,7 +253,7 @@ void BVH<Primitive>::find_closest_hit(const Ray& ray,const Node& node, Trace& cl
 
         find_closest_hit(ray, nodes[first], closest);
         // Trace c1 = closest;
-        //if(hit[second_hit].x < closest.distance) 
+        //if(hit[second_hit].x < closest.distance)
             find_closest_hit(ray, nodes[second], closest);
     }
 }
@@ -261,7 +261,7 @@ void BVH<Primitive>::find_closest_hit(const Ray& ray,const Node& node, Trace& cl
 template<typename Primitive>
 Trace BVH<Primitive>::hit(const Ray& ray) const {
 
-    
+
     // TODO (PathTracer): Task 3
     // Implement ray - BVH intersection test. A ray intersects
     // with a BVH aggregate if and only if it intersects a primitive in
