@@ -101,7 +101,6 @@ void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_lea
 
     // Sort all primitives in place
     // So that primitives in the left bucket come first in the primitives list
-    int iprim;
     auto ns = primitives.begin() + node.start;
     auto ne = ns + node.size;
     auto middle =
@@ -224,8 +223,45 @@ void BVH<Primitive>::build(std::vector<Primitive>&& prims, size_t max_leaf_size)
 }
 
 template<typename Primitive>
+void BVH<Primitive>::find_closest_hit(const Ray& ray,const Node& node, Trace& closest) const {
+    if(node.is_leaf()) {
+        for(std::vector<Primitive>::const_iterator itPrim = primitives.begin() + node.start;
+            itPrim != primitives.begin() + node.start + node.size; itPrim++) {
+            Trace hit = itPrim->hit(ray);
+            closest = Trace::min(closest, hit);
+        }
+    } else {
+        const Node& cl = nodes[node.l];
+        const Node& cr = nodes[node.r];
+        Vec2 hit[2];
+        bool hl = cl.bbox.hit(ray, hit[0]);
+        bool hr = cr.bbox.hit(ray, hit[1]);
+        // Not hit any boxes
+        if(!hl && !hr) 
+            return;
+        
+        // hit only one box
+        if((hl && !hr) || (!hl && hr)) {
+            find_closest_hit(ray, hl ? cl : cr ,closest);        
+            return;
+        }
+
+        // Hit two boxes, so we should check the closest first
+        size_t first = hit[0].x <= hit[1].x ? node.l : node.r;
+        size_t second = first == node.l ? node.r : node.l;
+        size_t second_hit = second == node.l ? 0 : 1;
+
+        find_closest_hit(ray, nodes[first], closest);
+        Trace c1 = closest;
+        //if(hit[second_hit].x < closest.distance) 
+            find_closest_hit(ray, nodes[second], closest);
+    }
+}
+
+template<typename Primitive>
 Trace BVH<Primitive>::hit(const Ray& ray) const {
 
+    
     // TODO (PathTracer): Task 3
     // Implement ray - BVH intersection test. A ray intersects
     // with a BVH aggregate if and only if it intersects a primitive in
@@ -235,10 +271,7 @@ Trace BVH<Primitive>::hit(const Ray& ray) const {
     // Again, remember you can use hit() on any Primitive value.
 
     Trace ret;
-    for(const Primitive& prim : primitives) {
-        Trace hit = prim.hit(ray);
-        ret = Trace::min(ret, hit);
-    }
+    find_closest_hit(ray, nodes[0], ret);
     return ret;
 }
 
