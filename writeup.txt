@@ -4,7 +4,7 @@ Names:
 
 Work: 
 Task 1: Generating Camera Rays by Jerry 
-Task 2: Ray-Triangle Intersection by Jerry
+Task 2: Ray-Triangle Intersection by Jerry + Ray-Sphere Intersection by Dmitrii
 Task 3: BVH intersection by Dmitrii
 Task 4: Shadow Rays by Dmitrii
 Task 6: Perfect Mirror Reflection by Jerry 
