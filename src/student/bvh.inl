@@ -28,7 +28,7 @@ void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_lea
         bboxes.resize(BUCKETS_COUNT, BBox());
         float cmin = node.bbox.min[cind];
         float cmax = node.bbox.max[cind];
-        float dC = (cmax - cmin) / BUCKETS_COUNT;
+        float dC = (cmax - cmin) / (BUCKETS_COUNT-1);
 
         // Assign primitives to buckets
         for(auto itPrim = node.start; itPrim < (size_t)(node.start + node.size); ++itPrim) {
@@ -94,7 +94,7 @@ void BVH<Primitive>::subdivide(size_t root_node_addr, Node& node, size_t max_lea
     bboxes.resize(BUCKETS_COUNT, BBox());
     float cmin = node.bbox.min[dimMin];
     float cmax = node.bbox.max[dimMin];
-    float dC = (cmax - cmin) / BUCKETS_COUNT;
+    float dC = (cmax - cmin) / (BUCKETS_COUNT-1);
 
     // Assign primitives to buckets
     std::vector<int> lind, rind;

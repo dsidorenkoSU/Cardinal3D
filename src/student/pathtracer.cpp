@@ -131,8 +131,13 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
                 
                 Ray sr(hit.position + sample.direction * EPS_F, sample.direction);
                 auto strace = scene.hit(sr);
-                if(strace.hit) 
-                    continue;
+                
+                if(strace.hit) {
+                    float distToLight = sample.distance - strace.distance; 
+                    if (distToLight < EPS_F)   
+                        continue;
+                } 
+                
                 // Tip: since you're creating the shadow ray at the intersection point, it may
                 // intersect the surface at time=0. Similarly, if the ray is allowed to have
                 // arbitrary length, it will hit the light it was cast at. Therefore, you should
