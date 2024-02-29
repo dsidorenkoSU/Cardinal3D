@@ -11,8 +11,8 @@ Task 6: Perfect Mirror Reflection by Jerry
 
 Description: 
 - task 1: N/A
-- task 2: triangle intersect when u+v<1, u, v> 0, also check 0<t<distbound
-- task 3: 
-- task 4: 
-- task 5: 
+- task 2: triangle intersect when u+v<1, u, v> 0, also check 0<t<distbound, Extra credit: Ray-Sphere intersection implemented
+- task 3: Implemented BVH using buckets method from the lecture 
+- task 4: Tracing ray to lightsource and checking if it hits any objects in between the point of interest and the light. 
+- task 5: Lambertian material implemented  
 - task 6: mirror only, add recursive ray tracing in path trace::trace_ray

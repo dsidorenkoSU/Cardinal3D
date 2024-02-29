@@ -56,11 +56,10 @@ BSDF_Sample BSDF_Lambertian::sample(Vec3 out_dir) const {
 
     // TODO (PathTracer): Task 5
     // Implement lambertian BSDF. Use of BSDF_Lambertian::sampler may be useful
-    //BSDF_Lambertian::sampler()
+    
     BSDF_Sample ret;
-    ret.attenuation = Spectrum(); // What is the ratio of reflected/incoming light?
-    ret.direction = Vec3();       // What direction should we sample incoming light from?
-    ret.pdf = 0.0f;               // Was was the PDF of the sampled direction?
+    ret.attenuation = albedo; // What is the ratio of reflected/incoming light?
+    ret.direction = sampler.sample(ret.pdf); // What direction should we sample incoming light from?
     return ret;
 }
 

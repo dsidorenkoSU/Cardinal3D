@@ -131,11 +131,10 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
                 
                 Ray sr(hit.position + sample.direction * EPS_F, sample.direction);
                 auto strace = scene.hit(sr);
-                
-                if(strace.hit) {
-                    float distToLight = sample.distance - strace.distance; 
-                    if (distToLight < EPS_F)   
-                        continue;
+                float sRayToLight = (hit.position - strace.position).norm(); 
+                if(strace.hit && sRayToLight < sample.distance) {
+                    
+                    continue;
                 } 
                 
                 // Tip: since you're creating the shadow ray at the intersection point, it may
@@ -160,12 +159,15 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
                 sample_light(light);
             if(env_light.has_value())
                 sample_light(env_light.value());
+            
         }
     }
 
 
     // TODO (PathTracer): Task 5
     // Compute an indirect lighting estimate using path tracing with Monte Carlo.
+    BSDF_Sample bsdf_s = bsdf.sample(out_dir);
+    radiance_out += bsdf_s.emissive;
 
     // (1) Ray objects have a depth field; if it reaches max_depth, you should
     // terminate the path.
