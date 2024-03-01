@@ -40,10 +40,12 @@ struct Ray {
     /// The direction the ray travels in
     Vec3 dir;
     /// Total attenuation new light will be scaled by to get to the source of this ray
-    Spectrum throughput = Spectrum(1.0f);
+    Spectrum beta = Spectrum(1.0f);
     /// Recursive depth of ray
     size_t depth = 0;
-
+    
+    Spectrum Lo = Spectrum(0.0f);
+    
     /// The minimum and maximum distance at which this ray can encounter collisions
     /// note that this field is mutable, meaning it can be changed on const Rays
     mutable Vec2 dist_bounds = Vec2(0.0f, std::numeric_limits<float>::infinity());

@@ -100,7 +100,7 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
     // The starter code sets radiance_out to (0.25,0.25,0.25) so that you can test your geometry
     // queries before you implement real lighting in Tasks 4 and 5. (i.e, anything that gets hit is not black.)
     // You should change this to (0,0,0) and accumulate the direct and indirect lighting computed below.
-    Spectrum radiance_out = Spectrum(0.0f);
+    Spectrum Lo = ray.Lo;
     {
 
         // lambda function to sample a light. Called in loop below.
@@ -146,7 +146,7 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
                 // Note: that along with the typical cos_theta, pdf factors, we divide by samples.
                 // This is because we're doing another monte-carlo estimate of the lighting from
                 // area lights here.
-                radiance_out += (cos_theta / (samples * sample.pdf)) * sample.radiance * attenuation;
+                Lo += ray.beta * (cos_theta / (samples * sample.pdf)) * sample.radiance * attenuation;
             }
         };
 
@@ -163,23 +163,35 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
         }
     }
 
-
     // TODO (PathTracer): Task 5
     // Compute an indirect lighting estimate using path tracing with Monte Carlo.
     BSDF_Sample bsdf_s = bsdf.sample(out_dir);
-    radiance_out += bsdf_s.emissive;
-
+    
+    Lo += bsdf_s.emissive;
     // (1) Ray objects have a depth field; if it reaches max_depth, you should
     // terminate the path.
-    if (ray.depth == max_depth) return {};
-
-    if (bsdf.is_mirror()) {
-      BSDF_Sample bsdf_s = bsdf.sample(out_dir);
-      radiance_out = radiance_out * bsdf_s.attenuation;
-      Ray ray_r(hit.position, object_to_world.rotate(bsdf_s.direction)); 
-      ray_r.depth = ray.depth+1; 
-      return trace_ray(ray_r);
+    if (ray.depth == max_depth) {
+        return {};
     }
+    
+    
+    float q = 0.25f;
+    if (RNG::unit() < q){
+        
+        return Lo;
+    }
+    Ray ray_r(hit.position, object_to_world.rotate(bsdf_s.direction));
+    Spectrum rb = ray.beta * bsdf_s.attenuation * dot(bsdf_s.direction, hit.normal);
+    ray_r.depth = ray.depth + 1;
+    ray_r.beta = rb * (1.0f - q); 
+    ray_r.Lo = Lo;
+    return trace_ray(ray_r);
+
+    /* if(bsdf.is_mirror()) {
+      //BSDF_Sample bsdf_s = bsdf.sample(out_dir);
+      ro = radiance_out * bsdf_s.attenuation;
+      
+    }*/
 
     // (2) Randomly select a new ray direction (it may be reflection or transmittance
     // ray depending on surface type) using bsdf.sample()
@@ -195,7 +207,7 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
 
     // (5) Add contribution due to incoming light with proper weighting. Remember to add in
     // the BSDF sample emissive term.
-    return radiance_out;
+    //return radiance_out;
 }
 
 } // namespace PT
