@@ -11,19 +11,19 @@ namespace PT {
 // point within pixel (x,y) of the output image.
 //
 
-// Pathtracer::trace_pixel must support super-sampling. The starter code provided to you 
-// will call Pathtracer::trace_pixel once for each sample (Pathtracer::n_samples) and 
-// resolve the results to compute final pixel values. 
-// Your implementation of Pathtracer::trace_pixel must choose a new location within the pixel for each sample. 
+// Pathtracer::trace_pixel must support super-sampling. The starter code provided to you
+// will call Pathtracer::trace_pixel once for each sample (Pathtracer::n_samples) and
+// resolve the results to compute final pixel values.
+// Your implementation of Pathtracer::trace_pixel must choose a new location within the pixel for each sample.
 // This is equivalent to saying that the ray tracer wil shoot n_samples camera rays per pixel.
 
 Spectrum Pathtracer::trace_pixel(size_t x, size_t y) {
 
     Vec2 xy((float)x, (float)y);
-    Vec2 wh((float)out_w, (float)out_h); 
+    Vec2 wh((float)out_w, (float)out_h);
 
-    // std::cout << x << " " << y << std::endl; 
-    // std::cout << out_w << " " << out_h << std::endl << std::endl; 
+    // std::cout << x << " " << y << std::endl;
+    // std::cout << out_w << " " << out_h << std::endl << std::endl;
 
     // TODO (PathTracer): Task 1
 
@@ -33,21 +33,21 @@ Spectrum Pathtracer::trace_pixel(size_t x, size_t y) {
     // nomalize to (0, 1)
     // If n_samples is 1, please send the ray through the center of the pixel.
     // If n_samples > 1, please send the ray through any random point within the pixel
-    Vec2 pixel_norm; 
-    float pdf; 
+    Vec2 pixel_norm;
+    float pdf;
 
     if (n_samples == 1) {
-        pixel_norm = (xy.operator+(0.5)).operator/(wh); // center of pixel if 1 
-        //td::cout << pixel_norm << std::endl << std::endl; 
+        pixel_norm = (xy.operator+(0.5)).operator/(wh); // center of pixel if 1
+        //td::cout << pixel_norm << std::endl << std::endl;
     }
     else {
         // Tip: consider making a call to Samplers::Rect::Uniform
-        Samplers::Rect::Uniform temp; 
-        // potentially temp.sample(pdf) can have same point for multiple samples and even get 1 
-        Vec2 sample_pt = temp.sample(pdf); 
-        pixel_norm = (xy.operator+(sample_pt)).operator/(wh); 
+        Samplers::Rect::Uniform temp;
+        // potentially temp.sample(pdf) can have same point for multiple samples and even get 1
+        Vec2 sample_pt = temp.sample(pdf);
+        pixel_norm = (xy.operator+(sample_pt)).operator/(wh);
         //std::cout << sample_pt << std::endl;
-        //std::cout << pixel_norm << std::endl << std::endl; 
+        //std::cout << pixel_norm << std::endl << std::endl;
 
     }
     // As an example, the code below generates a ray through the bottom left of the
@@ -111,7 +111,7 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
             for(int i = 0; i < samples; i++) {
 
                 // Grab a sample of the light source. See rays/light.h for definition of this struct.
-                // Most importantly for Task 4, it contains the distance to the light from hit.position. 
+                // Most importantly for Task 4, it contains the distance to the light from hit.position.
                 Light_Sample sample = light.sample(hit.position);
                 Vec3 in_dir = world_to_object.rotate(sample.direction);
 
@@ -128,15 +128,15 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
                 // TODO (PathTracer): Task 4
                 // Construct a shadow ray and compute whether the intersected surface is
                 // in shadow. Only accumulate light if not in shadow.
-                
+
                 Ray sr(hit.position + sample.direction * EPS_F, sample.direction);
                 auto strace = scene.hit(sr);
-                float sRayToLight = (hit.position - strace.position).norm(); 
+                float sRayToLight = (hit.position - strace.position).norm();
                 if(strace.hit && sRayToLight < sample.distance) {
-                    
+
                     continue;
-                } 
-                
+                }
+
                 // Tip: since you're creating the shadow ray at the intersection point, it may
                 // intersect the surface at time=0. Similarly, if the ray is allowed to have
                 // arbitrary length, it will hit the light it was cast at. Therefore, you should
@@ -159,38 +159,38 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
                 sample_light(light);
             if(env_light.has_value())
                 sample_light(env_light.value());
-            
+
         }
     }
 
     // TODO (PathTracer): Task 5
     // Compute an indirect lighting estimate using path tracing with Monte Carlo.
     BSDF_Sample bsdf_s = bsdf.sample(out_dir);
-    
+
     Lo += bsdf_s.emissive;
     // (1) Ray objects have a depth field; if it reaches max_depth, you should
     // terminate the path.
     if (ray.depth == max_depth) {
-        return {};
+        return Lo;
     }
-    
-    
+
+
     float q = 0.25f;
     if (RNG::unit() < q){
-        
+
         return Lo;
     }
     Ray ray_r(hit.position, object_to_world.rotate(bsdf_s.direction));
-    Spectrum rb = ray.beta * bsdf_s.attenuation * dot(bsdf_s.direction, hit.normal);
     ray_r.depth = ray.depth + 1;
-    ray_r.beta = rb * (1.0f - q); 
+    ray_r.beta = ray.beta * bsdf_s.attenuation * dot(bsdf_s.direction, hit.normal)/ bsdf_s.pdf;
+    ray_r.beta *= 1.0f/(1.0f - q);
     ray_r.Lo = Lo;
     return trace_ray(ray_r);
 
     /* if(bsdf.is_mirror()) {
       //BSDF_Sample bsdf_s = bsdf.sample(out_dir);
       ro = radiance_out * bsdf_s.attenuation;
-      
+
     }*/
 
     // (2) Randomly select a new ray direction (it may be reflection or transmittance
