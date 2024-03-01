@@ -100,7 +100,7 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
     // The starter code sets radiance_out to (0.25,0.25,0.25) so that you can test your geometry
     // queries before you implement real lighting in Tasks 4 and 5. (i.e, anything that gets hit is not black.)
     // You should change this to (0,0,0) and accumulate the direct and indirect lighting computed below.
-    Spectrum Lo = ray.Lo;
+    Spectrum El = Spectrum(0.0f);
     {
 
         // lambda function to sample a light. Called in loop below.
@@ -146,7 +146,7 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
                 // Note: that along with the typical cos_theta, pdf factors, we divide by samples.
                 // This is because we're doing another monte-carlo estimate of the lighting from
                 // area lights here.
-                Lo += ray.beta * (cos_theta / (samples * sample.pdf)) * sample.radiance * attenuation;
+                El += ray.beta * (cos_theta / (samples * sample.pdf)) * sample.radiance * attenuation;
             }
         };
 
@@ -162,7 +162,7 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
 
         }
     }
-
+    Spectrum Lo = ray.Lo + El;
     // TODO (PathTracer): Task 5
     // Compute an indirect lighting estimate using path tracing with Monte Carlo.
     BSDF_Sample bsdf_s = bsdf.sample(out_dir);
@@ -171,19 +171,19 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
     // (1) Ray objects have a depth field; if it reaches max_depth, you should
     // terminate the path.
     if (ray.depth == max_depth) {
-        return Lo;
+        return {};
     }
 
 
     float q = 0.25f;
     if (RNG::unit() < q){
 
-        return Lo;
+        return El+bsdf_s.emissive;
     }
     Ray ray_r(hit.position, object_to_world.rotate(bsdf_s.direction));
     ray_r.depth = ray.depth + 1;
     ray_r.beta = ray.beta * bsdf_s.attenuation * dot(bsdf_s.direction, hit.normal)/ bsdf_s.pdf;
-    ray_r.beta *= 1.0f/(1.0f - q);
+    ray_r.beta *= 1.0f / (1 - q);
     ray_r.Lo = Lo;
     return trace_ray(ray_r);
 
