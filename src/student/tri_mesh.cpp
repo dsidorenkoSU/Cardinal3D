@@ -80,6 +80,7 @@ Trace Triangle::hit(const Ray& ray) const {
             ret.normal = v_0.normal.operator*(1-u_cal-v_cal) + v_1.normal.operator*(u_cal) + v_2.normal.operator*(v_cal);   // what was the surface normal at the intersection? 
                                                                                                                             // (this should be interpolated between the three vertex normals)  
             ray.dist_bounds.y = t_cal; // update dist_bounds since hit. 
+            ret.normal.normalize();
             //PT::Pathtracer::log_ray(ray, 10.0f);
 
         }

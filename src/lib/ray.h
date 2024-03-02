@@ -45,7 +45,9 @@ struct Ray {
     size_t depth = 0;
     
     Spectrum Lo = Spectrum(0.0f);
-    
+    Spectrum rcolor = Spectrum(0.0f);
+    Spectrum DoE = Spectrum(0.0f);
+
     /// The minimum and maximum distance at which this ray can encounter collisions
     /// note that this field is mutable, meaning it can be changed on const Rays
     mutable Vec2 dist_bounds = Vec2(0.0f, std::numeric_limits<float>::infinity());

@@ -57,14 +57,18 @@ Spectrum Pathtracer::trace_pixel(size_t x, size_t y) {
     // Tip: you may want to use log_ray for debugging. Given ray t, the following lines
     // of code will log .03% of all rays (see util/rand.h) for visualization in the app.
     // see student/debug.h for more detail.
-    if (RNG::coin_flip(0.03f))
-     log_ray(out, 10.0f);
+    //if (RNG::coin_flip(0.03f))
+    // log_ray(out, 10.0f);
 
     return trace_ray(out);
 }
 
 Spectrum Pathtracer::trace_ray(const Ray& ray) {
 
+    
+    // Lo += bsdf_s.emissive;
+    //  (1) Ray objects have a depth field; if it reaches max_depth, you should
+    //  terminate the path.
     // Trace ray into scene. If nothing is hit, sample the environment
     Trace hit = scene.hit(ray);
     if(!hit.hit) {
@@ -73,7 +77,10 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
         }
         return {};
     }
-
+    log_ray(ray, hit.distance, ray.rcolor);
+    if(ray.depth == max_depth) {
+        return {};
+    }
     // If we're using a two-sided material, treat back-faces the same as front-faces
     const BSDF& bsdf = materials[hit.material];
     if(!bsdf.is_sided() && dot(hit.normal, ray.dir) > 0.0f) {
@@ -162,29 +169,33 @@ Spectrum Pathtracer::trace_ray(const Ray& ray) {
 
         }
     }
+    
     Spectrum Lo = ray.Lo + El;
     // TODO (PathTracer): Task 5
     // Compute an indirect lighting estimate using path tracing with Monte Carlo.
     BSDF_Sample bsdf_s = bsdf.sample(out_dir);
+    //Lo += ray.beta * bsdf_s.emissive;
+    if(ray.depth == 0) {
+        Lo += bsdf_s.emissive;
+    } 
+    
 
-    Lo += bsdf_s.emissive;
-    // (1) Ray objects have a depth field; if it reaches max_depth, you should
-    // terminate the path.
-    if (ray.depth == max_depth) {
-        return {};
-    }
-
-
-    float q = 0.25f;
+    float q = 0.25f;//1.0f - std::min(1.0f, Lo.luma());
     if (RNG::unit() < q){
 
-        return El+bsdf_s.emissive;
+        return Lo;
     }
     Ray ray_r(hit.position, object_to_world.rotate(bsdf_s.direction));
     ray_r.depth = ray.depth + 1;
-    ray_r.beta = ray.beta * bsdf_s.attenuation * dot(bsdf_s.direction, hit.normal)/ bsdf_s.pdf;
+    float dotN = dot(bsdf_s.direction, world_to_object.rotate(hit.normal));
+    
+    ray_r.beta = ray.beta * bsdf_s.attenuation * dotN/ bsdf_s.pdf;
     ray_r.beta *= 1.0f / (1 - q);
     ray_r.Lo = Lo;
+    ray_r.rcolor = Spectrum(dotN > 0.0f ? 0.0f: 1.0f);
+    
+    //log_ray(ray_r, 1.0f, ray_r.rcolor);
+    //log_ray(ray_r, 10.0f, Spectrum(1.0f, 0.0f, 0.0f));
     return trace_ray(ray_r);
 
     /* if(bsdf.is_mirror()) {
