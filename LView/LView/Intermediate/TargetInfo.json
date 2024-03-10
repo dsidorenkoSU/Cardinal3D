@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "LView",
+			"Path": "..\\Source\\LView.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "LViewEditor",
+			"Path": "..\\Source\\LViewEditor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}
