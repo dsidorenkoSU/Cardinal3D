@@ -165,4 +165,6 @@ private:
     Scene_Object x_scl, z_scl, y_scl;
 };
 
+bool postfix(const std::string& path, const std::string& type);
+
 } // namespace Gui
