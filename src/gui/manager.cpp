@@ -792,6 +792,16 @@ void Manager::UInew_obj(Undo& undo) {
                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
                      ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
+    if(ImGui::CollapsingHeader("landscape_test")) {
+        ImGui::PushID(idx++);
+        static float R = 1.0f;
+        // ImGui::SliderFloat("Side Length", &R, 0.01f, 10.0f, "%.2f");
+        if(ImGui::Button("Add")) {
+            add_mesh("Landscape_test", Util::cube_mesh(R / 2.0f), false);
+        }
+        ImGui::PopID();
+    }
+
     if(ImGui::CollapsingHeader("Cube")) {
         ImGui::PushID(idx++);
         static float R = 1.0f;
