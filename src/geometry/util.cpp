@@ -1,6 +1,6 @@
 
 #include "util.h"
-
+#include <iostream>
 #include <map>
 
 namespace Util {
@@ -41,6 +41,79 @@ GL::Mesh cube_mesh(float r) {
 GL::Mesh square_mesh(float r) {
     Gen::Data square = Gen::quad(r, r);
     return GL::Mesh(std::move(square.verts), std::move(square.elems));
+}
+
+GL::Mesh landscape_mesh(float **arr) {
+    (void)arr;
+    
+    //float r = 1/2.0f; 
+
+    int size_x = 6; 
+    int size_y = 5; 
+    float arr1[size_x][size_y]; 
+
+    Gen::Data landscape;
+
+    int loc = 0;
+    // fake z 
+    for(int x = 0; x < size_x; x++) {
+        float temp_x = float(x)/(size_x-1); 
+        if (x >= size_x/2) temp_x = 1-temp_x; 
+	  	for(int y = 0; y < size_y; y++) {
+            float temp_y = float(y)/(size_y-1); 
+            if (y >= size_y/2) temp_y = 1-temp_y; 
+            arr1[x][y] = temp_y+temp_x;
+            // arr1[x][y] = 0; // debug 
+            Vec3 vertex_temp(float(x)-float(size_x-1)/2, arr1[x][y], float(y)-float(size_y-1)/2); 
+            landscape.verts.push_back({vertex_temp, vertex_temp.unit(), 0});
+            
+            if (y != size_y-1 && x != size_x-1){
+                loc = x*size_y + y; 
+                //std::cout << loc << std::endl;
+                // 1st triangle 
+                landscape.elems.push_back(loc);
+                landscape.elems.push_back(loc+1);
+                landscape.elems.push_back(loc+size_y);
+                // 2nd triangle 
+                landscape.elems.push_back(loc+1);
+                landscape.elems.push_back(loc+size_y+1);
+                landscape.elems.push_back(loc+size_y);
+            }
+        }
+    } 
+
+     //      loc = x*size_y + y; 
+    //landscape_mesh.elems.insert(bottom.elems.end(), top.elems.begin(), top.elems.end());
+
+    
+    // pos normal ID 
+    // Gen::Data landscape{{{Vec3{-r, 0.0f, -r}, Vec3{0.0f, 1.0f, 0.0f}, 0},
+    //          {Vec3{-r, 0.0f, r}, Vec3{0.0f, 1.0f, 0.0f}, 0},
+    //          {Vec3{x, 0.0f, -r}, Vec3{0.0f, 1.0f, 0.0f}, 0},
+    //          {Vec3{r, 0.0f, r}, Vec3{0.0f, 1.0f, 0.0f}, 0}},
+    //         {0, 1, 2, 2, 1, 3}};
+
+//     Data quad(float x, float y) {
+//     return {{{Vec3{-x, 0.0f, -y}, Vec3{0.0f, 1.0f, 0.0f}, 0},
+//              {Vec3{-x, 0.0f, y}, Vec3{0.0f, 1.0f, 0.0f}, 0},
+//              {Vec3{x, 0.0f, -y}, Vec3{0.0f, 1.0f, 0.0f}, 0},
+//              {Vec3{x, 0.0f, y}, Vec3{0.0f, 1.0f, 0.0f}, 0}},
+//             {0, 1, 2, 2, 1, 3}};
+// }
+// Data cube(float r) {
+//     return {{{Vec3{-r, -r, -r}, Vec3{-r, -r, -r}.unit(), 0},
+//              {Vec3{r, -r, -r}, Vec3{r, -r, -r}.unit(), 0},
+//              {Vec3{r, r, -r}, Vec3{r, r, -r}.unit(), 0},
+//              {Vec3{-r, r, -r}, Vec3{-r, r, -r}.unit(), 0},
+//              {Vec3{-r, -r, r}, Vec3{-r, -r, r}.unit(), 0},
+//              {Vec3{r, -r, r}, Vec3{r, -r, r}.unit(), 0},
+//              {Vec3{r, r, r}, Vec3{r, r, r}.unit(), 0},
+//              {Vec3{-r, r, r}, Vec3{-r, r, r}.unit(), 0}},
+//             {0, 1, 3, 3, 1, 2, 1, 5, 2, 2, 5, 6, 5, 4, 6, 6, 4, 7,
+//              4, 0, 7, 7, 0, 3, 3, 2, 7, 7, 2, 6, 4, 5, 0, 0, 5, 1}};
+//}
+
+    return GL::Mesh(std::move(landscape.verts), std::move(landscape.elems));
 }
 
 GL::Mesh quad_mesh(float x, float y) {
@@ -169,7 +242,9 @@ Data quad(float x, float y) {
              {Vec3{-x, 0.0f, y}, Vec3{0.0f, 1.0f, 0.0f}, 0},
              {Vec3{x, 0.0f, -y}, Vec3{0.0f, 1.0f, 0.0f}, 0},
              {Vec3{x, 0.0f, y}, Vec3{0.0f, 1.0f, 0.0f}, 0}},
-            {0, 1, 2, 2, 1, 3}};
+            {0, 1, 2, 1, 3, 2}};
+
+            //{0, 1, 2, 2, 1, 3}};
 }
 
 Data cube(float r) {
