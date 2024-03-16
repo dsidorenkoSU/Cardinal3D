@@ -16,7 +16,7 @@ GL::Mesh sphere_mesh(float r, int subdivsions);
 GL::Mesh hemi_mesh(float r);
 GL::Mesh cone_mesh(float bradius, float tradius, float height, int sides = 12, bool cap = true);
 GL::Mesh capsule_mesh(float h, float r);
-GL::Mesh landscape_mesh(float **arr);
+GL::Mesh landscape_mesh(float **arr, int land_size);
 
 GL::Mesh arrow_mesh(float base, float tip, float height);
 GL::Mesh scale_mesh();

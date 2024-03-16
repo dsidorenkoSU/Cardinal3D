@@ -794,15 +794,16 @@ void Manager::UInew_obj(Undo& undo) {
 
     if(ImGui::CollapsingHeader("landscape_test")) {
         ImGui::PushID(idx++);
-        // static float R = 1.0f;
-        // ImGui::SliderFloat("Side Length", &R, 0.01f, 10.0f, "%.2f");
+        static int land_size = 10;
+        ImGui::SliderInt("LandSize", &land_size, 10, 1000);
+
         if(ImGui::Button("Add")) {
             // call landscape generation which gives 2D float array, below is just a dummy 
             float **array_temp;
             array_temp = new float *[10];
             for(int i = 0; i <10; i++)
                 array_temp[i] = new float[10];
-            add_mesh("Landscape_test", Util::landscape_mesh(array_temp), false);
+            add_mesh("Landscape_test", Util::landscape_mesh(array_temp, land_size), false);
         }
         ImGui::PopID();
     }

@@ -43,15 +43,15 @@ GL::Mesh square_mesh(float r) {
     return GL::Mesh(std::move(square.verts), std::move(square.elems));
 }
 
-GL::Mesh landscape_mesh(float **arr) {
+GL::Mesh landscape_mesh(float **arr, int land_size) {
     (void)arr;
     
     //float r = 1/2.0f; 
 
-    int size_x = 6; 
-    int size_y = 5; 
+    int size_x = land_size; 
+    int size_y = land_size; 
     float arr1[size_x][size_y]; 
-
+    int mod_result = (land_size / 10) + 1;
     Gen::Data landscape;
 
     int loc = 0;
@@ -64,7 +64,7 @@ GL::Mesh landscape_mesh(float **arr) {
             if (y >= size_y/2) temp_y = 1-temp_y; 
             arr1[x][y] = temp_y+temp_x;
             // arr1[x][y] = 0; // debug 
-            Vec3 vertex_temp(float(x)-float(size_x-1)/2, arr1[x][y], float(y)-float(size_y-1)/2); 
+            Vec3 vertex_temp((float(x)-float(size_x-1)/2)/mod_result, arr1[x][y], (float(y)-float(size_y-1)/2)/mod_result); 
             landscape.verts.push_back({vertex_temp, vertex_temp.unit(), 0});
             
             if (y != size_y-1 && x != size_x-1){
