@@ -7,7 +7,8 @@
 
 LandscapeGen::LandscapeGen():
 	out_w(2028), 
-	out_h(2048) 
+	out_h(2048), 
+    grid_size(64.0f) 
 {
 }
 
@@ -88,24 +89,46 @@ float perlin(float x, float y, Samplers::Rect::Uniform& s) {
                   // add 0.5
 }
 
-void LandscapeGen::generate() 
-{
+void LandscapeGen::generate() {
+    auto& d = generateOctave(grid_size);
     data.resize(out_w * out_h);
-    Samplers::Rect::Uniform s;
     for(int i = 0; i < out_w; ++i) {
         for(int j = 0; j < out_h; ++j) {
-            float x = (float)i / 64.0f;
-            float y = (float)j / 64.0f;
-            float peIJ = (0.5f + perlin(x, y, s) * 0.5f);
-            data[i * out_w + j] = 255 * peIJ;
+            data[i * out_w + j] = (unsigned char)(d[i * out_w + j] * 255);
         }
     }
 }
 
-void LandscapeGen::writeToFile(const std::string& path) {
+void LandscapeGen::writeToFile(const std::string& path) 
+{
     
     if(!stbi_write_png(path.c_str(), (int)out_w, (int)out_h, 1, data.data(), out_w)) {
         std::cout << "Failed to write png!" << std::endl;
+    }    
+}
+
+void LandscapeGen::setSize(int size)
+{
+    out_w = size;
+    out_h = size;
+}
+
+void LandscapeGen::octaveGridSize(float size) 
+{
+    grid_size = size;
+}
+
+std::vector<float> LandscapeGen::generateOctave(float _grid_size) {
+    std::vector<float> _data;
+    _data.resize(out_w * out_h);
+    Samplers::Rect::Uniform s;
+    for(int i = 0; i < out_w; ++i) {
+        for(int j = 0; j < out_h; ++j) {
+            float x = (float)i / _grid_size;
+            float y = (float)j / _grid_size;
+            float peIJ = (0.5f + perlin(x, y, s) * 0.5f);
+            _data[i * out_w + j] = peIJ;
+        }
     }
-    
+    return std::move(_data);
 }

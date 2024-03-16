@@ -90,6 +90,13 @@ void student_debug_ui() {
         debug_data.rayBoxHit = t;
     }
 
+    static int LSSize = 2048;
+    InputInt("LandscapeSize", &LSSize);
+    static float GridSize = 64.0f;
+    InputFloat("GridSize", &GridSize);
+    gen.setSize(LSSize);
+    gen.octaveGridSize(GridSize);
+
     if(ImGui::Button("Generate Landscape")) {
         char* path = nullptr;
         NFD_SaveDialog("png", nullptr, &path);

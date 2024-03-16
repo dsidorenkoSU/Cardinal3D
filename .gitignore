@@ -8,6 +8,9 @@ bin/.vs
 bin/*.opendb
 bin/project.sublime-workspace
 data/log_*
+LView/LView/Binaries/*
+LView/LView/.idea/*
+LView/LView/Intermediate/*
 log_*
 imgui.ini
 deps/win/assimp/assimp.lib
