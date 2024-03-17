@@ -792,7 +792,7 @@ void Manager::UInew_obj(Undo& undo) {
                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
                      ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
-    if(ImGui::CollapsingHeader("landscape_test")) {
+    if(ImGui::CollapsingHeader("Landscape")) {
         ImGui::PushID(idx++);
         static int land_size = 10;
         ImGui::SliderInt("LandSize", &land_size, 10, 1000);
@@ -803,7 +803,7 @@ void Manager::UInew_obj(Undo& undo) {
             array_temp = new float *[10];
             for(int i = 0; i <10; i++)
                 array_temp[i] = new float[10];
-            add_mesh("Landscape_test", Util::landscape_mesh(array_temp, land_size), false);
+            add_mesh("Landscape", Util::landscape_mesh(array_temp, land_size), false);
         }
         ImGui::PopID();
     }
