@@ -110,11 +110,11 @@ bool Manager::keydown(Undo& undo, SDL_Keysym key, Scene& scene, Camera& cam) {
     return false;
 }
 
-static bool postfix(const std::string& path, const std::string& type) {
-    if(path.length() >= type.length())
-        return path.compare(path.length() - type.length(), type.length(), type) == 0;
-    return false;
-}
+// bool postfix(const std::string& path, const std::string& type) {
+//     if(path.length() >= type.length())
+//         return path.compare(path.length() - type.length(), type.length(), type) == 0;
+//     return false;
+// }
 
 bool Manager::save_scene(Scene& scene, Undo& undo) {
     if(save_file.empty()) {

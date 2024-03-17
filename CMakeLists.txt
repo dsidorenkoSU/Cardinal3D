@@ -133,7 +133,8 @@ else()
                     "src/student/spline.inl"
                     "src/student/env_light.cpp"
                     "src/student/skeleton.cpp"
-                    "src/student/tri_mesh.cpp")
+                    "src/student/tri_mesh.cpp"
+		    "src/student/LandscapeGen.cpp")
 endif()
 
 set(SOURCES_CARDINAL3D ${SOURCES_CARDINAL3D_UTIL}

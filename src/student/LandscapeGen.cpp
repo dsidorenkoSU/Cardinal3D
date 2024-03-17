@@ -35,9 +35,9 @@ Vec2 randomGradient(int ix, int iy) {
     const unsigned s = w / 2; // rotation width
     unsigned a = ix, b = iy;
     a *= 3284157443;
-    b ^= a << s | a >> w - s;
+    b ^= a << s | a >> (w - s);
     b *= 1911520717;
-    a ^= b << s | b >> w - s;
+    a ^= b << s | b >> (w - s);
     a *= 2048419325;
     float random = a * (3.14159265 / ~(~0u >> 1)); // in [0, 2*Pi]
     Vec2 v;
@@ -49,7 +49,7 @@ Vec2 randomGradient(int ix, int iy) {
 // Computes the dot product of the distance and gradient vectors.
 float dotGridGradient(int ix, int iy, float x, float y, Samplers::Rect::Uniform& s) {
     // Get gradient from integer coordinates
-    float pdf;
+    // float pdf;
     Vec2 gradient = randomGradient(ix, iy);
 
     // Compute the distance vector
@@ -90,7 +90,7 @@ float perlin(float x, float y, Samplers::Rect::Uniform& s) {
 }
 
 void LandscapeGen::generate() {
-    auto& d = generateOctave(grid_size);
+    auto d = generateOctave(grid_size);
     data.resize(out_w * out_h);
     for(int i = 0; i < out_w; ++i) {
         for(int j = 0; j < out_h; ++j) {
@@ -130,5 +130,5 @@ std::vector<float> LandscapeGen::generateOctave(float _grid_size) {
             _data[i * out_w + j] = peIJ;
         }
     }
-    return std::move(_data);
+    return _data;
 }
