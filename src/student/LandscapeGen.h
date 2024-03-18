@@ -9,7 +9,7 @@ public:
     
     LandscapeGen();
 
-    void generate();
+    std::vector<float> generate();
 
     void generateOctaves(int nOct);
 
@@ -19,9 +19,11 @@ public:
 
     void setGridSizeMin(float ogs);
 
+     std::vector<float> generateOctave(float _grid_size);
+
 private: 
 
-    std::vector<float> generateOctave(float _grid_size);
+   
 
 	int out_w, out_h;
     float grid_size_min;

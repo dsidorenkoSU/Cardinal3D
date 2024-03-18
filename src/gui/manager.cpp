@@ -7,6 +7,7 @@
 
 #include "../geometry/util.h"
 #include "../scene/renderer.h"
+#include "../student/LandscapeGen.h"
 
 namespace Gui {
 
@@ -795,17 +796,34 @@ void Manager::UInew_obj(Undo& undo) {
 
     if(ImGui::CollapsingHeader("Landscape")) {
         ImGui::PushID(idx++);
-        static int land_size = 64;
+        static int land_size = 256;
         ImGui::SliderInt("LandSize", &land_size, 64, 2048);
+        static int grid_size_min = 16;
+        ImGui::SliderInt("GridSizeMin", &grid_size_min, 8, 2048);
+        if(ImGui::Button("Save")) {
+            char* path = nullptr;
+            NFD_SaveDialog("png", nullptr, &path);
+            if(path) {
 
+                std::string spath(path);
+                if(!Gui::postfix(spath, ".png")) {
+                    spath += ".png";
+                }
+                lsgen.writeToFile(spath);
+
+                free(path);
+            }
+        }
         if(ImGui::Button("Add")) {
             // call landscape generation which gives 2D float array, below is just a dummy 
-            float **arr_land;
-            arr_land = new float *[land_size];
-            for(int i = 0; i < land_size; i++)
-                arr_land[i] = new float[land_size];
+            lsgen.setSize(land_size);
+            lsgen.setGridSizeMin(grid_size_min);
+            
+            auto arr_land = lsgen.generateOctave((float)grid_size_min);
+            //for(int i = 0; i < land_size; i++)
+            //    arr_land[i] = new float[land_size];
      
-            for(int x = 0; x < land_size; x++) {
+            /* for(int x = 0; x < land_size; x++) {
                 float temp_x = float(x)/(land_size-1); 
                 if (x >= land_size/2) temp_x = 1-temp_x; 
                 for(int y = 0; y < land_size; y++) {
@@ -814,24 +832,26 @@ void Manager::UInew_obj(Undo& undo) {
                     arr_land[x][y] = (temp_y+temp_x); // this has maximum value of 1
                     //arr_land[x][y] = 1; // debug 
                 }
-            }
+            }*/
             add_mesh("Landscape", Util::landscape_mesh(arr_land, land_size), false);
             
             // call grass generation which gives 2D float array, below is just a dummy 
-            int **arr_grass;
+            /* int** arr_grass;
             arr_grass = new int *[land_size];
             for(int i = 0; i < land_size; i++)
                 arr_grass[i] = new int[land_size];
-     
+            */
             int block_size = 16; // block size to calculate density 
-
+            auto& arr_grass = arr_land;
+            std::vector<int> arr_grass_processed(arr_grass.size());
+            std::fill(arr_grass_processed.begin(), arr_grass_processed.end(), 0);
             for(int bx = 0; bx < land_size;  bx += block_size) {
                 for(int by = 0; by < land_size; by += block_size) {
                     float sum = 0;
                     if ((bx + block_size) <= land_size && (by + block_size) <= land_size) { // ignore edge case for visulazation 
                         for(int x = 0; x < block_size; ++x) {
                             for(int y = 0; y < block_size; ++y) {
-                                sum += arr_land[bx + x][by + y]; // use arr_land for now. 
+                                sum += arr_grass[(bx + x) * land_size + by + y]; // use arr_land for now. 
                             }
                         }
                     }
@@ -840,10 +860,10 @@ void Manager::UInew_obj(Undo& undo) {
                         float threshold = 0.2f; 
                         for(int x = 0; x < block_size; ++x) {
                             for(int y = 0; y < block_size; ++y) {
-                                arr_grass[bx + x][by + y] = 0;
+                                arr_grass_processed[(bx + x) * land_size + by + y] = 0;
                                 if (density > threshold) {
                                     if (RNG::coin_flip((density-threshold)/(1-threshold))) { 
-                                        arr_grass[bx + x][by + y] = 1; 
+                                        arr_grass_processed[(bx + x) * land_size + by + y] = 1; 
                                     }
                                 }
                             }
@@ -851,7 +871,8 @@ void Manager::UInew_obj(Undo& undo) {
                     }
                 }
             }
-            add_mesh("Grass", Util::grass_mesh(arr_land, arr_grass, land_size), false);
+            add_mesh("Grass", Util::grass_mesh(arr_land, arr_grass_processed, land_size), false);
+            
         }
         ImGui::PopID();
     }

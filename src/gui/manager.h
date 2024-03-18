@@ -21,6 +21,7 @@
 #include "rig.h"
 #include "simulate.h"
 #include "widgets.h"
+#include "../student/LandscapeGen.h"
 
 namespace Gui {
 
@@ -120,6 +121,7 @@ private:
     GL::Lines baseplane;
     void create_baseplane();
     Vec2 window_dim;
+    LandscapeGen lsgen;
 };
 
 }; // namespace Gui

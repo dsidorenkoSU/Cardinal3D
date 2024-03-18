@@ -89,7 +89,7 @@ float perlin(float x, float y, Samplers::Rect::Uniform& s) {
                   // add 0.5
 }
 
-void LandscapeGen::generate() {
+std::vector<float> LandscapeGen::generate() {
     std::vector<std::vector<float>> octaves;
 
     for(int gs = out_w / 2; gs > grid_size_min; gs /= 2) {
@@ -115,6 +115,7 @@ void LandscapeGen::generate() {
             data[i * out_w + j] = (unsigned char)(final[i * out_w + j] * 255);
         }
     }
+    return final;
 }
 
 void LandscapeGen::generateOctaves(int nOct) {

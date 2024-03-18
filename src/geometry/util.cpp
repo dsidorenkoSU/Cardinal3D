@@ -43,7 +43,7 @@ GL::Mesh square_mesh(float r) {
     return GL::Mesh(std::move(square.verts), std::move(square.elems));
 }
 
-GL::Mesh landscape_mesh(float **arr, int land_size) {
+GL::Mesh landscape_mesh(std::vector<float>& arr, int land_size) {
 
     int size_x = land_size; 
     int size_y = land_size; 
@@ -54,7 +54,7 @@ GL::Mesh landscape_mesh(float **arr, int land_size) {
     for(int x = 0; x < size_x; x++) {
 	  	for(int y = 0; y < size_y; y++) {
             // arr1[x][y] = 0; // debug 
-            Vec3 vertex_temp((float(x)-float(size_x-1)/2)/mod_result, arr[x][y], (float(y)-float(size_y-1)/2)/mod_result); 
+            Vec3 vertex_temp((float(x)-float(size_x-1)/2)/mod_result, arr[x * size_y + y], (float(y)-float(size_y-1)/2)/mod_result); 
             landscape.verts.push_back({vertex_temp, vertex_temp.unit(), 0});
             
             if (y != size_y-1 && x != size_x-1){
@@ -74,7 +74,9 @@ GL::Mesh landscape_mesh(float **arr, int land_size) {
     return GL::Mesh(std::move(landscape.verts), std::move(landscape.elems));
 }
 
-GL::Mesh grass_mesh(float **arr_land, int **arr_grass, int land_size) {
+GL::Mesh grass_mesh(std::vector<float>& arr_land, std::vector<int>& arr_grass_processed,
+                    int land_size)
+{
     
     int size_x = land_size; 
     int size_y = land_size; 
@@ -84,9 +86,9 @@ GL::Mesh grass_mesh(float **arr_land, int **arr_grass, int land_size) {
 
     for(int x = 0; x < size_x; x++) {
 	  	for(int y = 0; y < size_y; y++) {
-            if (arr_grass[x][y] == 1) {
-                float r = 0.1f/mod_result;
-                Vec3 vertex_temp((float(x)-float(size_x-1)/2)/mod_result, arr_land[x][y], (float(y)-float(size_y-1)/2)/mod_result); 
+            if (arr_grass_processed[x * size_y + y] == 1) {
+                float r = 0.2f/mod_result;
+                Vec3 vertex_temp((float(x)-float(size_x-1)/2)/mod_result, arr_land[ x* size_y + y], (float(y)-float(size_y-1)/2)/mod_result); 
                 Gen::Data grass_t = Gen::grass(vertex_temp, r, count);
                 grass.verts.insert(grass.verts.end(), grass_t.verts.begin(), grass_t.verts.end());
                 grass.elems.insert(grass.elems.end(), grass_t.elems.begin(), grass_t.elems.end());
