@@ -92,7 +92,7 @@ float perlin(float x, float y, Samplers::Rect::Uniform& s) {
                   // add 0.5
 }
 
-std::vector<float> LandscapeGen::generate(int nOct) {
+std::vector<float>& LandscapeGen::generate(int nOct) {
     std::vector<std::vector<float>> octaves;
 
     int gs = out_w / 2;
@@ -104,14 +104,14 @@ std::vector<float> LandscapeGen::generate(int nOct) {
 
     float falloff = 0.5f;
     float oct_weight = 1.0f;
-    std::vector<float> final(out_w * out_h);
-    std::fill(final.begin(), final.end(), 0.0f);
+    heightmap_normalized.resize(out_w * out_h);
+    std::fill(heightmap_normalized.begin(), heightmap_normalized.end(), 0.0f);
     for(int o = 0; o < octaves.size(); ++o) {
         float oMin = 1.0f;
         float oMax = -1.0f;
         for(int i = 0; i < out_w; ++i) {
             for(int j = 0; j < out_h; ++j) {
-                final[i * out_w + j] += octaves[o][i * out_w + j] * oct_weight;
+                heightmap_normalized[i * out_w + j] += octaves[o][i * out_w + j] * oct_weight;
                 if(octaves[o][i * out_w + j] < oMin) {
                     oMin = octaves[o][i * out_w + j];
                 }
@@ -128,9 +128,9 @@ std::vector<float> LandscapeGen::generate(int nOct) {
     float fMax = -1.0f;
     for(int i = 0; i < out_w; ++i) {
         for(int j = 0; j < out_h; ++j) {
-            final[i * out_w + j] = 0.5f + final[i * out_w + j] * 0.5f;
-            fMin = std::min(fMin, final[i * out_w + j]);
-            fMax = std::max(fMax, final[i * out_w + j]);
+            heightmap_normalized[i * out_w + j] = 0.5f + heightmap_normalized[i * out_w + j] * 0.5f;
+            fMin = std::min(fMin, heightmap_normalized[i * out_w + j]);
+            fMax = std::max(fMax, heightmap_normalized[i * out_w + j]);
         }
     }
 
@@ -138,17 +138,41 @@ std::vector<float> LandscapeGen::generate(int nOct) {
     float dF = fMax - fMin;
     for(int i = 0; i < out_w; ++i) {
         for(int j = 0; j < out_h; ++j) {
-            final[i * out_w + j] = (final[i * out_w + j] - fMin) / dF; 
+            heightmap_normalized[i * out_w + j] = (heightmap_normalized[i * out_w + j] - fMin) / dF; 
         }
     }
+
+    calcGrassDensity();
     
     data.resize(out_w * out_h);
     for(int i = 0; i < out_w; ++i) {
         for(int j = 0; j < out_h; ++j) {
-            data[i * out_w + j] = (unsigned char)(final[i * out_w + j] * 255);
+            data[i * out_w + j] = (unsigned char)(heightmap_normalized[i * out_w + j] * 255);
         }
     }
-    return final;
+    return heightmap_normalized;
+}
+
+void LandscapeGen::calcGrassDensity() {
+    grass_density.resize(heightmap_normalized.size());
+    for(int i = 0; i < out_w; ++i) {
+        for(int j = 0; j < out_h; ++j) {
+
+            if(i == 0 || i == out_w - 1 || j == 0 || j == out_h - 1) {
+                grass_density[i * out_w + j] = 0.0f;
+                continue;
+            }
+
+            if(heightmap_normalized[i * out_w + j] > 0.2f &&
+               heightmap_normalized[i * out_w + j] < 0.7f) {
+                grass_density[i * out_w + j] = 1.0f;
+            }
+        }
+    }
+}           
+
+std::vector<float>& LandscapeGen::grassDensity() {
+    return grass_density;
 }
 
 void LandscapeGen::generateOctaves(int nOct) {
@@ -172,23 +196,6 @@ void LandscapeGen::setSize(int size)
 void LandscapeGen::setGridSizeMin(float size) 
 {
     grid_size_min = size;
-}
-
-void normalize2(float v[2]) {
-    float s;
-
-    s = sqrt(v[0] * v[0] + v[1] * v[1]);
-    v[0] = v[0] / s;
-    v[1] = v[1] / s;
-}
-
-void normalize3(float v[3]) {
-    float s;
-
-    s = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    v[0] = v[0] / s;
-    v[1] = v[1] / s;
-    v[2] = v[2] / s;
 }
 
 

@@ -16,7 +16,9 @@ public:
     
     LandscapeGen();
 
-    std::vector<float> generate(int nOct);
+    std::vector<float>& generate(int nOct);
+
+    std::vector<float>& grassDensity();
 
     void generateOctaves(int nOct);
 
@@ -32,14 +34,11 @@ public:
 
 private: 
 
-   
-    /* int p[B + B + 2];
-    float g3[B + B + 2][3];
-    float g2[B + B + 2][2];
-    float g1[B + B + 2];
-    int start;*/
+    void calcGrassDensity();
 
 	int out_w, out_h;
     float grid_size_min;
     std::vector<unsigned char> data;
+    std::vector<float> heightmap_normalized;
+    std::vector<float> grass_density;
 };

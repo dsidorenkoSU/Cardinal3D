@@ -796,9 +796,9 @@ void Manager::UInew_obj(Undo& undo) {
 
     if(ImGui::CollapsingHeader("Landscape")) {
         ImGui::PushID(idx++);
-        static int land_size = 256;
+        static int land_size = 1024;
         ImGui::InputInt("LandSize", &land_size);
-        static int NOctaves = 3;
+        static int NOctaves = 6;
         ImGui::InputInt("NOctaves", &NOctaves);
         if(ImGui::Button("Save")) {
             char* path = nullptr;
@@ -842,7 +842,7 @@ void Manager::UInew_obj(Undo& undo) {
                 arr_grass[i] = new int[land_size];
             */
             int block_size = 16; // block size to calculate density 
-            auto& arr_grass = arr_land;
+            auto& arr_grass = lsgen.grassDensity();
             std::vector<int> arr_grass_processed(arr_grass.size());
             std::fill(arr_grass_processed.begin(), arr_grass_processed.end(), 0);
             for(int bx = 0; bx < land_size;  bx += block_size) {
