@@ -38,9 +38,9 @@ Vec2 randomGradient(int ix, int iy) {
     const unsigned s = w / 2; // rotation width
     unsigned a = ix, b = iy;
     a *= 3284157443;
-    b ^= a << s | a >> w - s;
+    b ^= a << s | a >> (w - s);
     b *= 1911520717;
-    a ^= b << s | b >> w - s;
+    a ^= b << s | b >> (w - s);
     a *= 2048419325;
     float random = a * (3.14159265 / ~(~0u >> 1)); // in [0, 2*Pi]
     Vec2 v;
@@ -106,7 +106,7 @@ std::vector<float>& LandscapeGen::generate(int nOct) {
     float oct_weight = 1.0f;
     heightmap_normalized.resize(out_w * out_h);
     std::fill(heightmap_normalized.begin(), heightmap_normalized.end(), 0.0f);
-    for(int o = 0; o < octaves.size(); ++o) {
+    for(size_t o = 0; o < octaves.size(); ++o) {
         float oMin = 1.0f;
         float oMax = -1.0f;
         for(int i = 0; i < out_w; ++i) {
@@ -142,7 +142,7 @@ std::vector<float>& LandscapeGen::generate(int nOct) {
         }
     }
 
-    calcGrassDensity();
+    calcGrassDensity(0.7f);
     
     data.resize(out_w * out_h);
     for(int i = 0; i < out_w; ++i) {
@@ -153,8 +153,9 @@ std::vector<float>& LandscapeGen::generate(int nOct) {
     return heightmap_normalized;
 }
 
-void LandscapeGen::calcGrassDensity() {
+void LandscapeGen::calcGrassDensity(float threshold) {
     grass_density.resize(heightmap_normalized.size());
+    std::fill(grass_density.begin(), grass_density.end(), 0.0f);
     for(int i = 0; i < out_w; ++i) {
         for(int j = 0; j < out_h; ++j) {
 
@@ -163,7 +164,7 @@ void LandscapeGen::calcGrassDensity() {
                 continue;
             }
 
-            if(heightmap_normalized[i * out_w + j] < 0.7f) {
+            if(heightmap_normalized[i * out_w + j] < threshold) {
                 float sigma = sigmaAt(i, j);
                 grass_density[i * out_w + j] = 1.0f - sigma/0.5f;
             }

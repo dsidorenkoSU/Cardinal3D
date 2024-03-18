@@ -797,9 +797,12 @@ void Manager::UInew_obj(Undo& undo) {
     if(ImGui::CollapsingHeader("Landscape")) {
         ImGui::PushID(idx++);
         static int land_size = 1024;
-        ImGui::InputInt("LandSize", &land_size);
+        ImGui::InputInt("Land Size", &land_size);
         static int NOctaves = 6;
-        ImGui::InputInt("NOctaves", &NOctaves);
+        ImGui::InputInt("Number of Octaves", &NOctaves);
+        static float threshold_grass = 0.7f; 
+        ImGui::SliderFloat("Grass Threshold", &threshold_grass, 0.0f, 1.0f, "%.1f");
+
         if(ImGui::Button("Save")) {
             char* path = nullptr;
             NFD_SaveDialog("png", nullptr, &path);
@@ -842,6 +845,7 @@ void Manager::UInew_obj(Undo& undo) {
                 arr_grass[i] = new int[land_size];
             */
             int block_size = 16; // block size to calculate density 
+            lsgen.calcGrassDensity(threshold_grass);
             auto& arr_grass = lsgen.grassDensity();
             std::vector<int> arr_grass_processed(arr_grass.size());
             std::fill(arr_grass_processed.begin(), arr_grass_processed.end(), 0);
@@ -857,7 +861,7 @@ void Manager::UInew_obj(Undo& undo) {
                     }
                     if ((bx + block_size) <= land_size && (by + block_size) <= land_size) { // ignore edge case for visulazation 
                         float density = sum / (block_size * block_size); 
-                        float threshold = 0.2f; 
+                        float threshold = 0.0f; 
                         for(int x = 0; x < block_size; ++x) {
                             for(int y = 0; y < block_size; ++y) {
                                 arr_grass_processed[(bx + x) * land_size + by + y] = 0;

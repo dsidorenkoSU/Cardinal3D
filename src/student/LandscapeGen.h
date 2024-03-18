@@ -30,9 +30,9 @@ public:
 
     std::vector<float> generateOctave(float _grid_size);
 
-private: 
+    void calcGrassDensity(float threshold);
 
-    void calcGrassDensity();
+private: 
 
     float avgHeightAt(int x, int y);
 
