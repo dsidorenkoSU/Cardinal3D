@@ -1,6 +1,6 @@
 
 #include "util.h"
-
+#include <iostream>
 #include <map>
 
 namespace Util {
@@ -41,6 +41,61 @@ GL::Mesh cube_mesh(float r) {
 GL::Mesh square_mesh(float r) {
     Gen::Data square = Gen::quad(r, r);
     return GL::Mesh(std::move(square.verts), std::move(square.elems));
+}
+
+GL::Mesh landscape_mesh(float **arr, int land_size) {
+
+    int size_x = land_size; 
+    int size_y = land_size; 
+    int mod_result = (land_size / 10) + 1; // this is for visualization purpose 
+    Gen::Data landscape;
+
+    int loc = 0;
+    for(int x = 0; x < size_x; x++) {
+	  	for(int y = 0; y < size_y; y++) {
+            // arr1[x][y] = 0; // debug 
+            Vec3 vertex_temp((float(x)-float(size_x-1)/2)/mod_result, arr[x][y], (float(y)-float(size_y-1)/2)/mod_result); 
+            landscape.verts.push_back({vertex_temp, vertex_temp.unit(), 0});
+            
+            if (y != size_y-1 && x != size_x-1){
+                loc = x*size_y + y; 
+                //std::cout << loc << std::endl;
+                // 1st triangle 
+                landscape.elems.push_back(loc);
+                landscape.elems.push_back(loc+1);
+                landscape.elems.push_back(loc+size_y);
+                // 2nd triangle 
+                landscape.elems.push_back(loc+1);
+                landscape.elems.push_back(loc+size_y+1);
+                landscape.elems.push_back(loc+size_y);
+            }
+        }
+    } 
+    return GL::Mesh(std::move(landscape.verts), std::move(landscape.elems));
+}
+
+GL::Mesh grass_mesh(float **arr_land, int **arr_grass, int land_size) {
+    
+    int size_x = land_size; 
+    int size_y = land_size; 
+    int mod_result = (land_size / 10) + 1; // this is for visualization purpose 
+    Gen::Data grass; 
+    unsigned int count = 0; 
+
+    for(int x = 0; x < size_x; x++) {
+	  	for(int y = 0; y < size_y; y++) {
+            if (arr_grass[x][y] == 1) {
+                float r = 0.1f/mod_result;
+                Vec3 vertex_temp((float(x)-float(size_x-1)/2)/mod_result, arr_land[x][y], (float(y)-float(size_y-1)/2)/mod_result); 
+                Gen::Data grass_t = Gen::grass(vertex_temp, r, count);
+                grass.verts.insert(grass.verts.end(), grass_t.verts.begin(), grass_t.verts.end());
+                grass.elems.insert(grass.elems.end(), grass_t.elems.begin(), grass_t.elems.end());
+                count++; 
+            }
+            
+        }
+    } 
+    return GL::Mesh(std::move(grass.verts), std::move(grass.elems));
 }
 
 GL::Mesh quad_mesh(float x, float y) {
@@ -169,7 +224,9 @@ Data quad(float x, float y) {
              {Vec3{-x, 0.0f, y}, Vec3{0.0f, 1.0f, 0.0f}, 0},
              {Vec3{x, 0.0f, -y}, Vec3{0.0f, 1.0f, 0.0f}, 0},
              {Vec3{x, 0.0f, y}, Vec3{0.0f, 1.0f, 0.0f}, 0}},
-            {0, 1, 2, 2, 1, 3}};
+            {0, 1, 2, 1, 3, 2}};
+
+            //{0, 1, 2, 2, 1, 3}};
 }
 
 Data cube(float r) {
@@ -184,6 +241,21 @@ Data cube(float r) {
             {0, 1, 3, 3, 1, 2, 1, 5, 2, 2, 5, 6, 5, 4, 6, 6, 4, 7,
              4, 0, 7, 7, 0, 3, 3, 2, 7, 7, 2, 6, 4, 5, 0, 0, 5, 1}};
 }
+
+Data grass(Vec3 loc_start, float r, unsigned int count) { // loc_start is starting location, count to update index 
+
+    return {{{loc_start.operator+(Vec3{-r, 0.0f, -r}), (loc_start.operator+(Vec3{-r, 0.0f, -r})).unit(), 0},
+             {loc_start.operator+(Vec3{r, 0.0f, -r}),  (loc_start.operator+(Vec3{r, 0.0f, -r})).unit(), 0},
+             {loc_start.operator+(Vec3{r, 3*r, -r}),   (loc_start.operator+(Vec3{r, 3*r, -r})).unit(), 0},
+             {loc_start.operator+(Vec3{-r, 3*r, -r}),  (loc_start.operator+(Vec3{-r, 3*r, -r})).unit(), 0},
+             {loc_start.operator+(Vec3{-r, 0.0f, r}),  (loc_start.operator+(Vec3{-r, 0.0f, r})).unit(), 0},
+             {loc_start.operator+(Vec3{r, 0.0f, r}),   (loc_start.operator+(Vec3{r, 0.0f, r})).unit(), 0},
+             {loc_start.operator+(Vec3{r, 3*r, r}),    (loc_start.operator+(Vec3{r, 3*r, r})).unit(), 0},
+             {loc_start.operator+(Vec3{-r, 3*r, r}),   (loc_start.operator+(Vec3{-r, 3*r, r})).unit(), 0}},
+            {0+count*8, 1+count*8, 3+count*8, 3+count*8, 1+count*8, 2+count*8, 1+count*8, 5+count*8, 2+count*8, 2+count*8, 5+count*8, 6+count*8, 5+count*8, 4+count*8, 6+count*8, 6+count*8, 4+count*8, 7+count*8,
+             4+count*8, 0+count*8, 7+count*8, 7+count*8, 0+count*8, 3+count*8, 3+count*8, 2+count*8, 7+count*8, 7+count*8, 2+count*8, 6+count*8, 4+count*8, 5+count*8, 0+count*8, 0+count*8, 5+count*8, 1+count*8}};
+}
+
 
 // https://wiki.unity3d.com/index.php/ProceduralPrimitives
 Data cone(float bradius, float tradius, float height, int sides, bool caps) {

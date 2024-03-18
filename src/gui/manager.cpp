@@ -1,7 +1,8 @@
 
 #include <imgui/imgui.h>
 #include <nfd/nfd.h>
-
+#include "../util/rand.h"
+#include <iostream>
 #include "manager.h"
 
 #include "../geometry/util.h"
@@ -791,6 +792,69 @@ void Manager::UInew_obj(Undo& undo) {
     ImGui::Begin("New Object", &new_obj_window,
                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
                      ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+
+    if(ImGui::CollapsingHeader("Landscape")) {
+        ImGui::PushID(idx++);
+        static int land_size = 64;
+        ImGui::SliderInt("LandSize", &land_size, 64, 2048);
+
+        if(ImGui::Button("Add")) {
+            // call landscape generation which gives 2D float array, below is just a dummy 
+            float **arr_land;
+            arr_land = new float *[land_size];
+            for(int i = 0; i < land_size; i++)
+                arr_land[i] = new float[land_size];
+     
+            for(int x = 0; x < land_size; x++) {
+                float temp_x = float(x)/(land_size-1); 
+                if (x >= land_size/2) temp_x = 1-temp_x; 
+                for(int y = 0; y < land_size; y++) {
+                    float temp_y = float(y)/(land_size-1); 
+                    if (y >= land_size/2) temp_y = 1-temp_y; 
+                    arr_land[x][y] = (temp_y+temp_x); // this has maximum value of 1
+                    //arr_land[x][y] = 1; // debug 
+                }
+            }
+            add_mesh("Landscape", Util::landscape_mesh(arr_land, land_size), false);
+            
+            // call grass generation which gives 2D float array, below is just a dummy 
+            int **arr_grass;
+            arr_grass = new int *[land_size];
+            for(int i = 0; i < land_size; i++)
+                arr_grass[i] = new int[land_size];
+     
+            int block_size = 16; // block size to calculate density 
+
+            for(int bx = 0; bx < land_size;  bx += block_size) {
+                for(int by = 0; by < land_size; by += block_size) {
+                    float sum = 0;
+                    if ((bx + block_size) <= land_size && (by + block_size) <= land_size) { // ignore edge case for visulazation 
+                        for(int x = 0; x < block_size; ++x) {
+                            for(int y = 0; y < block_size; ++y) {
+                                sum += arr_land[bx + x][by + y]; // use arr_land for now. 
+                            }
+                        }
+                    }
+                    if ((bx + block_size) <= land_size && (by + block_size) <= land_size) { // ignore edge case for visulazation 
+                        float density = sum / (block_size * block_size); 
+                        float threshold = 0.2f; 
+                        for(int x = 0; x < block_size; ++x) {
+                            for(int y = 0; y < block_size; ++y) {
+                                arr_grass[bx + x][by + y] = 0;
+                                if (density > threshold) {
+                                    if (RNG::coin_flip((density-threshold)/(1-threshold))) { 
+                                        arr_grass[bx + x][by + y] = 1; 
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            add_mesh("Grass", Util::grass_mesh(arr_land, arr_grass, land_size), false);
+        }
+        ImGui::PopID();
+    }
 
     if(ImGui::CollapsingHeader("Cube")) {
         ImGui::PushID(idx++);
