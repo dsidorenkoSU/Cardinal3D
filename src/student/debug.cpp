@@ -92,10 +92,10 @@ void student_debug_ui() {
 
     static int LSSize = 2048;
     InputInt("LandscapeSize", &LSSize);
-    static float GridSize = 64.0f;
-    InputFloat("GridSize", &GridSize);
+    static float GridSizeMin = 64.0f;
+    InputFloat("GridSizeMin", &GridSizeMin);
     gen.setSize(LSSize);
-    gen.octaveGridSize(GridSize);
+    gen.setGridSizeMin(GridSizeMin);
 
     if(ImGui::Button("Generate Landscape")) {
         char* path = nullptr;

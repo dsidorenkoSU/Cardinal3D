@@ -8,7 +8,7 @@
 LandscapeGen::LandscapeGen():
 	out_w(2028), 
 	out_h(2048), 
-    grid_size(64.0f) 
+    grid_size_min(64.0f) 
 {
 }
 
@@ -90,13 +90,35 @@ float perlin(float x, float y, Samplers::Rect::Uniform& s) {
 }
 
 void LandscapeGen::generate() {
-    auto d = generateOctave(grid_size);
+    std::vector<std::vector<float>> octaves;
+
+    for(int gs = out_w / 2; gs > grid_size_min; gs /= 2) {
+        auto d = generateOctave(gs);
+        octaves.push_back(d);    
+    }
+    float falloff = 0.5f;
+    float oct_weight = falloff;
+    std::vector<float> final(out_w * out_h);
+    std::fill(final.begin(), final.end(), 0.0f);
+    for(int o = 0; o < octaves.size(); ++o) {
+        for(int i = 0; i < out_w; ++i) {
+            for(int j = 0; j < out_h; ++j) {
+                final[i * out_w + j] += octaves[o][i * out_w + j] * oct_weight;
+            }
+        }
+        oct_weight *= falloff;
+    }
+    
     data.resize(out_w * out_h);
     for(int i = 0; i < out_w; ++i) {
         for(int j = 0; j < out_h; ++j) {
-            data[i * out_w + j] = (unsigned char)(d[i * out_w + j] * 255);
+            data[i * out_w + j] = (unsigned char)(final[i * out_w + j] * 255);
         }
     }
+}
+
+void LandscapeGen::generateOctaves(int nOct) {
+
 }
 
 void LandscapeGen::writeToFile(const std::string& path) 
@@ -113,9 +135,9 @@ void LandscapeGen::setSize(int size)
     out_h = size;
 }
 
-void LandscapeGen::octaveGridSize(float size) 
+void LandscapeGen::setGridSizeMin(float size) 
 {
-    grid_size = size;
+    grid_size_min = size;
 }
 
 std::vector<float> LandscapeGen::generateOctave(float _grid_size) {
