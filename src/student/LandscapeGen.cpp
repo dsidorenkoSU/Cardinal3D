@@ -163,9 +163,9 @@ void LandscapeGen::calcGrassDensity() {
                 continue;
             }
 
-            if(heightmap_normalized[i * out_w + j] > 0.2f &&
-               heightmap_normalized[i * out_w + j] < 0.7f) {
-                grass_density[i * out_w + j] = 1.0f;
+            if(heightmap_normalized[i * out_w + j] < 0.7f) {
+                float sigma = sigmaAt(i, j);
+                grass_density[i * out_w + j] = 1.0f - sigma/0.5f;
             }
         }
     }
@@ -198,36 +198,6 @@ void LandscapeGen::setGridSizeMin(float size)
     grid_size_min = size;
 }
 
-
-void LandscapeGen::init() {
-    int i, j, k;
-
-    /* for(i = 0; i < B; i++) {
-        p[i] = i;
-
-        g1[i] = (float)((random() % (B + B)) - B) / B;
-
-        for(j = 0; j < 2; j++) g2[i][j] = (float)((random() % (B + B)) - B) / B;
-        normalize2(g2[i]);
-
-        for(j = 0; j < 3; j++) g3[i][j] = (float)((random() % (B + B)) - B) / B;
-        normalize3(g3[i]);
-    }
-
-    while(--i) {
-        k = p[i];
-        p[i] = p[j = random() % B];
-        p[j] = k;
-    }
-
-    for(i = 0; i < B + 2; i++) {
-        p[B + i] = p[i];
-        g1[B + i] = g1[i];
-        for(j = 0; j < 2; j++) g2[B + i][j] = g2[i][j];
-        for(j = 0; j < 3; j++) g3[B + i][j] = g3[i][j];
-    }*/
-}
-
 std::vector<float> LandscapeGen::generateOctave(float _grid_size) {
     std::vector<float> _data;
     _data.resize(out_w * out_h);
@@ -241,4 +211,26 @@ std::vector<float> LandscapeGen::generateOctave(float _grid_size) {
         }
     }
     return _data;
+}
+
+float LandscapeGen::avgHeightAt(int x, int y) {
+    float sum = 0.0f;
+    for(int dX = -1; dX<1;++dX){
+        for(int dY = -1; dY < 1; ++dY) {
+            sum += heightmap_normalized[(x + dX) * out_w + y + dY];    
+        }
+    } 
+    return sum / 9.0f;
+}
+
+float LandscapeGen::sigmaAt(int x, int y) {
+    float avg = avgHeightAt(x, y);
+    float sigSq = 0.0f;
+    for(int dX = -1; dX < 1; ++dX) {
+        for(int dY = -1; dY < 1; ++dY) {
+            float delta = heightmap_normalized[(x + dX) * out_w + y + dY] - avg; 
+            sigSq += delta*delta;
+        }
+    }
+    return sqrtf(sigSq);
 }

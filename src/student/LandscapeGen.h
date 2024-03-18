@@ -30,11 +30,13 @@ public:
 
     std::vector<float> generateOctave(float _grid_size);
 
-    void init();
-
 private: 
 
     void calcGrassDensity();
+
+    float avgHeightAt(int x, int y);
+
+    float sigmaAt(int x, int y);
 
 	int out_w, out_h;
     float grid_size_min;
