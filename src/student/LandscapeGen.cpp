@@ -4,6 +4,9 @@
 #include "../util/rand.h"
 #include "../rays/samplers.h"
 #include <sf_libs/stb_image_write.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 
 LandscapeGen::LandscapeGen():
 	out_w(2028), 
@@ -35,9 +38,9 @@ Vec2 randomGradient(int ix, int iy) {
     const unsigned s = w / 2; // rotation width
     unsigned a = ix, b = iy;
     a *= 3284157443;
-    b ^= a << s | a >> (w - s);
+    b ^= a << s | a >> w - s;
     b *= 1911520717;
-    a ^= b << s | b >> (w - s);
+    a ^= b << s | b >> w - s;
     a *= 2048419325;
     float random = a * (3.14159265 / ~(~0u >> 1)); // in [0, 2*Pi]
     Vec2 v;
@@ -89,24 +92,54 @@ float perlin(float x, float y, Samplers::Rect::Uniform& s) {
                   // add 0.5
 }
 
-std::vector<float> LandscapeGen::generate() {
+std::vector<float> LandscapeGen::generate(int nOct) {
     std::vector<std::vector<float>> octaves;
 
-    for(int gs = out_w / 2; gs > grid_size_min; gs /= 2) {
+    int gs = out_w / 2;
+    for(int i = 0; i < nOct;++i) {
         auto d = generateOctave(gs);
         octaves.push_back(d);    
+        gs /= 2;
     }
+
     float falloff = 0.5f;
-    float oct_weight = falloff;
+    float oct_weight = 1.0f;
     std::vector<float> final(out_w * out_h);
     std::fill(final.begin(), final.end(), 0.0f);
     for(int o = 0; o < octaves.size(); ++o) {
+        float oMin = 1.0f;
+        float oMax = -1.0f;
         for(int i = 0; i < out_w; ++i) {
             for(int j = 0; j < out_h; ++j) {
                 final[i * out_w + j] += octaves[o][i * out_w + j] * oct_weight;
+                if(octaves[o][i * out_w + j] < oMin) {
+                    oMin = octaves[o][i * out_w + j];
+                }
+                if(octaves[o][i * out_w + j] > oMax) {
+                    oMax = octaves[o][i * out_w + j];
+                }
             }
+
         }
         oct_weight *= falloff;
+    }
+    
+    float fMin = 1.0f;
+    float fMax = -1.0f;
+    for(int i = 0; i < out_w; ++i) {
+        for(int j = 0; j < out_h; ++j) {
+            final[i * out_w + j] = 0.5f + final[i * out_w + j] * 0.5f;
+            fMin = std::min(fMin, final[i * out_w + j]);
+            fMax = std::max(fMax, final[i * out_w + j]);
+        }
+    }
+
+    // renormalize to [0.0, 1.0]
+    float dF = fMax - fMin;
+    for(int i = 0; i < out_w; ++i) {
+        for(int j = 0; j < out_h; ++j) {
+            final[i * out_w + j] = (final[i * out_w + j] - fMin) / dF; 
+        }
     }
     
     data.resize(out_w * out_h);
@@ -141,6 +174,53 @@ void LandscapeGen::setGridSizeMin(float size)
     grid_size_min = size;
 }
 
+void normalize2(float v[2]) {
+    float s;
+
+    s = sqrt(v[0] * v[0] + v[1] * v[1]);
+    v[0] = v[0] / s;
+    v[1] = v[1] / s;
+}
+
+void normalize3(float v[3]) {
+    float s;
+
+    s = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    v[0] = v[0] / s;
+    v[1] = v[1] / s;
+    v[2] = v[2] / s;
+}
+
+
+void LandscapeGen::init() {
+    int i, j, k;
+
+    /* for(i = 0; i < B; i++) {
+        p[i] = i;
+
+        g1[i] = (float)((random() % (B + B)) - B) / B;
+
+        for(j = 0; j < 2; j++) g2[i][j] = (float)((random() % (B + B)) - B) / B;
+        normalize2(g2[i]);
+
+        for(j = 0; j < 3; j++) g3[i][j] = (float)((random() % (B + B)) - B) / B;
+        normalize3(g3[i]);
+    }
+
+    while(--i) {
+        k = p[i];
+        p[i] = p[j = random() % B];
+        p[j] = k;
+    }
+
+    for(i = 0; i < B + 2; i++) {
+        p[B + i] = p[i];
+        g1[B + i] = g1[i];
+        for(j = 0; j < 2; j++) g2[B + i][j] = g2[i][j];
+        for(j = 0; j < 3; j++) g3[B + i][j] = g3[i][j];
+    }*/
+}
+
 std::vector<float> LandscapeGen::generateOctave(float _grid_size) {
     std::vector<float> _data;
     _data.resize(out_w * out_h);
@@ -149,7 +229,7 @@ std::vector<float> LandscapeGen::generateOctave(float _grid_size) {
         for(int j = 0; j < out_h; ++j) {
             float x = (float)i / _grid_size;
             float y = (float)j / _grid_size;
-            float peIJ = (0.5f + perlin(x, y, s) * 0.5f);
+            float peIJ = perlin(x, y, s);
             _data[i * out_w + j] = peIJ;
         }
     }

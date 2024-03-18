@@ -106,7 +106,7 @@ void student_debug_ui() {
             if(!Gui::postfix(spath, ".png")) {
                 spath += ".png";
             }
-            gen.generate();        
+            gen.generate(3);        
             gen.writeToFile(spath);
             
             free(path);

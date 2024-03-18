@@ -797,9 +797,9 @@ void Manager::UInew_obj(Undo& undo) {
     if(ImGui::CollapsingHeader("Landscape")) {
         ImGui::PushID(idx++);
         static int land_size = 256;
-        ImGui::SliderInt("LandSize", &land_size, 64, 2048);
-        static int grid_size_min = 16;
-        ImGui::SliderInt("GridSizeMin", &grid_size_min, 8, 2048);
+        ImGui::InputInt("LandSize", &land_size);
+        static int NOctaves = 3;
+        ImGui::InputInt("NOctaves", &NOctaves);
         if(ImGui::Button("Save")) {
             char* path = nullptr;
             NFD_SaveDialog("png", nullptr, &path);
@@ -817,9 +817,9 @@ void Manager::UInew_obj(Undo& undo) {
         if(ImGui::Button("Add")) {
             // call landscape generation which gives 2D float array, below is just a dummy 
             lsgen.setSize(land_size);
-            lsgen.setGridSizeMin(grid_size_min);
+            //lsgen.setGridSizeMin(grid_size_min);
             
-            auto arr_land = lsgen.generateOctave((float)grid_size_min);
+            auto arr_land = lsgen.generate(NOctaves);
             //for(int i = 0; i < land_size; i++)
             //    arr_land[i] = new float[land_size];
      
