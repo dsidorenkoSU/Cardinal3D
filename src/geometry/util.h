@@ -17,6 +17,8 @@ GL::Mesh hemi_mesh(float r);
 GL::Mesh cone_mesh(float bradius, float tradius, float height, int sides = 12, bool cap = true);
 GL::Mesh capsule_mesh(float h, float r);
 GL::Mesh landscape_mesh(float **arr, int land_size);
+GL::Mesh grass_mesh(float **arr_land, int **arr_grass, int land_size);
+
 
 GL::Mesh arrow_mesh(float base, float tip, float height);
 GL::Mesh scale_mesh();
@@ -40,6 +42,7 @@ GL::Mesh dedup(Data&& d);
 
 // https://wiki.unity3d.com/index.php/ProceduralPrimitives
 Data cube(float r);
+Data grass(Vec3 loc_start, float r, unsigned int count);
 Data quad(float x, float y);
 Data ico_sphere(float radius, int level);
 Data uv_hemisphere(float radius);

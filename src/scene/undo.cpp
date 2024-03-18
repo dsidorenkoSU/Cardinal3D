@@ -226,8 +226,8 @@ Scene_Object& Undo::add_obj(GL::Mesh&& mesh, std::string name) {
 Scene_Object& Undo::add_obj(Halfedge_Mesh&& mesh, std::string name) {
     Scene_ID id = scene.add({}, std::move(mesh), name);
     scene.restore(id);
-    if (name == "Landscape")
-        scene.get_obj(id).material.opt.albedo = Spectrum(146.0f/255.0f, 104.0f/255.0f, 41.0f/255.0f);
+    if (name == "Landscape") scene.get_obj(id).material.opt.albedo = Spectrum(146.0f/255.0f, 104.0f/255.0f, 41.0f/255.0f); // initialize color 
+    if (name == "Grass") scene.get_obj(id).material.opt.albedo = Spectrum(0.0f, 1.0f, .00f);
     action([id, this]() { scene.restore(id); },
            [id, this]() {
                scene.erase(id);
