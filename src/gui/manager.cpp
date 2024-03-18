@@ -809,9 +809,6 @@ void Manager::UInew_obj(Undo& undo) {
             if(path) {
 
                 std::string spath(path);
-                if(!Gui::postfix(spath, ".png")) {
-                    spath += ".png";
-                }
                 lsgen.writeToFile(spath);
 
                 free(path);

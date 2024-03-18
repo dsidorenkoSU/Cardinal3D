@@ -182,10 +182,20 @@ void LandscapeGen::generateOctaves(int nOct) {
 
 void LandscapeGen::writeToFile(const std::string& path) 
 {
-    
-    if(!stbi_write_png(path.c_str(), (int)out_w, (int)out_h, 1, data.data(), out_w)) {
+    std::string height = path + "_height.png";
+    if(!stbi_write_png(height.c_str(), (int)out_w, (int)out_h, 1, data.data(), out_w)) {
         std::cout << "Failed to write png!" << std::endl;
-    }    
+    }
+    std::vector<unsigned char> grass_d(grass_density.size());
+    for(int i = 0; i<out_w; ++i) {
+        for(int j = 0; j < out_h; ++j) {
+            grass_d[i * out_w + j] = grass_density[i * out_w + j] * 255;        
+        }
+    }
+    std::string grass_path = path + "_grass.png";
+    if(!stbi_write_png(grass_path.c_str(), (int)out_w, (int)out_h, 1, grass_d.data(), out_w)) {
+        std::cout << "Failed to write png!" << std::endl;
+    }
 }
 
 void LandscapeGen::setSize(int size)
