@@ -28,11 +28,13 @@ public:
 
     void setGridSizeMin(float ogs);
 
-    std::vector<float> generateOctave(float _grid_size);
+    std::vector<float> generateOctave(int octave);
 
     void calcGrassDensity(float threshold);
 
 private: 
+
+    void generateTerrain(int maxOctaves);
 
     float avgHeightAt(int x, int y);
 

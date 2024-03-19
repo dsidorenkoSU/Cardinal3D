@@ -92,14 +92,12 @@ float perlin(float x, float y, Samplers::Rect::Uniform& s) {
                   // add 0.5
 }
 
-std::vector<float>& LandscapeGen::generate(int nOct) {
+void LandscapeGen::generateTerrain(int maxOctaves) {
     std::vector<std::vector<float>> octaves;
 
-    int gs = out_w / 2;
-    for(int i = 0; i < nOct;++i) {
-        auto d = generateOctave(gs);
-        octaves.push_back(d);    
-        gs /= 2;
+    for(int i = 1; i <= maxOctaves; ++i) {
+        auto d = generateOctave(i);
+        octaves.push_back(d);
     }
 
     float falloff = 0.5f;
@@ -119,10 +117,14 @@ std::vector<float>& LandscapeGen::generate(int nOct) {
                     oMax = octaves[o][i * out_w + j];
                 }
             }
-
         }
         oct_weight *= falloff;
     }
+}
+
+std::vector<float>& LandscapeGen::generate(int nOct) {
+   
+    generateTerrain(nOct);
     
     float fMin = 1.0f;
     float fMax = -1.0f;
@@ -209,14 +211,16 @@ void LandscapeGen::setGridSizeMin(float size)
     grid_size_min = size;
 }
 
-std::vector<float> LandscapeGen::generateOctave(float _grid_size) {
+std::vector<float> LandscapeGen::generateOctave(int octave) {
     std::vector<float> _data;
+    
     _data.resize(out_w * out_h);
     Samplers::Rect::Uniform s;
+    float octSize = out_w / pow(2, octave);
     for(int i = 0; i < out_w; ++i) {
         for(int j = 0; j < out_h; ++j) {
-            float x = (float)i / _grid_size;
-            float y = (float)j / _grid_size;
+            float x = (float)i / octSize;
+            float y = (float)j / octSize;
             float peIJ = perlin(x, y, s);
             _data[i * out_w + j] = peIJ;
         }
